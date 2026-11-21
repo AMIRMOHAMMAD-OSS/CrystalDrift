@@ -1,0 +1,28 @@
+\subsection{Relaxation and competing phases}
+We screened the first sixteen draws in each ordered pool, including chemically implausible and unconverged structures. We used CHGNet weights 0.3.0, simultaneous cell and site relaxation, ASE FIRE, a maximum of 100 steps and a generalized force threshold of 0.10\,eV/\AA\ \cite{chgnet}. We recorded final atomic forces and contact lengths separately. A short contact has distance below 60\% of the corresponding covalent-radius sum.
+
+We built a finite reference hull for each chemical system. We selected one MP-20 entry per reduced formula among phases within 0.10\,eV/atom of the archived MP hull, choosing the lowest deposited formation energy and breaking ties by material ID. We included the lowest-formation-energy elemental terminal even if it fell outside this window. We used all three MP-20 partitions to identify competing phases for physical evaluation. For each candidate we relaxed every selected subphase of its chemical system with the same CHGNet procedure. All 671 distinct references converged. In atom fractions, the signed gap is the candidate's CHGNet energy per atom minus the minimum energy of a convex combination of these phases at its composition. The energy above the hull augmented by the candidate is the positive part of this gap.
+
+A screened hit requires candidate convergence, passing the contact test, energy within 0.10\,eV/atom of this restricted surrogate hull, uniqueness within the arm's sixteen relaxed cells and novelty against the 27,136 deposited, unrelaxed MP-20 training structures, using the maximum-site matcher. All eighty candidate hulls contained their required phases and elemental terminals. Omitting competing phases can underestimate energy above hull. These labels refer to this CHGNet library and this optimizer budget.
+\begin{table}[!htbp]\centering\small
+\caption{Multielement relaxation on sixteen consecutive draws per arm. Short counts the final short-contact cases, gap pass counts the energetic criterion alone, and hit requires every screening criterion. Last columns give hits over all draws at training-seen and training-unseen reduced formulas.}\label{t:screen}
+\begin{tabular}{lrrrrrrr}\hline Prior and geometry & Conv. & Short & Gap pass & Novel & Hit & Seen & Unseen\\\hline
+Empirical + CrytalDrift & 7 & 4 & 4 & 14 & 2 & 2/16 & \textemdash\\
+Learned + CrytalDrift & 8 & 6 & 3 & 14 & 1 & 1/4 & 0/12\\
+Learned + flow (16) & 10 & 5 & 3 & 15 & 2 & 1/4 & 1/12\\
+Learned + uFlowCSP & 10 & 5 & 5 & 14 & 3 & 1/4 & 2/12\\
+CrystalFlow (joint) & 14 & 0 & 5 & 16 & 5 & \textemdash & 5/16\\
+\hline\end{tabular}\end{table}
+At the shared learned-prior compositions, five of twelve training-unseen drifting proposals converged, compared with six of twelve for the compact flow. None of the twelve drifting proposals met the full screen. The empirical prior supplied only seen formulas. Every relaxed draw was unique within its sixteen-structure arm.
+\begin{table}[!htbp]\centering\small
+\caption{Compute charged to each stand-alone pipeline. The generation column charges the entire timed 10,000-draw GPU workload. Other columns give single-thread CPU worker seconds for the sixteen candidates, their distinct reference phases and the final matcher and hull calculations. Hits per hour divides observed hits by the sum of these device-seconds.}\label{t:screen-time}
+\begin{tabular}{lrrrrr}\hline Prior and geometry & Generate & Candidates & Phases & Score & Hits/h\\\hline
+Empirical + CrytalDrift & 2.4 & 530.9 & 375.4 & 0.38 & 7.92\\
+Learned + CrytalDrift & 4.4 & 461.6 & 238.5 & 0.22 & 5.11\\
+Learned + flow (16) & 19.4 & 403.2 & 238.5 & 0.09 & 10.89\\
+Learned + uFlowCSP & 42.2 & 227.8 & 238.5 & 0.07 & 21.24\\
+CrystalFlow (joint) & \textemdash & 213.8 & 361.5 & 0.29 & \textemdash\\
+\hline\end{tabular}\end{table}
+References shared across arms are charged separately to each arm, and once per phase within an arm. These are yields of the specified generate-10,000, screen-16 workload with warm models. Totals exclude fitting, loading archives, the independent property benchmark and first-principles checks. They count GPU and CPU worker time at equal weight. The sample is small, and generation time for the deposited joint CrystalFlow pool is unknown.
+\begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{exp-structures.pdf}
+\caption{Generated and relaxed multielement cells drawn from the released CIFs, at a common length scale. We show the first three-or-more-element cell satisfying convergence and contact criteria for each displayed generator and the first eligible failure in archived arm and draw order. The fourth structure reached the optimizer step limit. Element colors, draw IDs, minimum separations and convergence outcomes are retained for each display.}\label{fig:physical-multielement}\end{figure}

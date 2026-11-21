@@ -1,0 +1,209 @@
+\documentclass[10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,graphicx}
+\setlength{\textwidth}{6.6in}
+\setlength{\textheight}{9.15in}
+\setlength{\oddsidemargin}{-0.025in}
+\setlength{\topmargin}{-0.55in}
+\setlength{\parindent}{1em}
+\renewcommand{\topfraction}{.92}
+\renewcommand{\bottomfraction}{.82}
+\renewcommand{\textfraction}{.08}
+\renewcommand{\floatpagefraction}{.78}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
+\setlength{\textfloatsep}{13pt plus 2pt minus 2pt}
+\setlength{\floatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\setlength{\emergencystretch}{1.8em}
+\newcommand{\T}{\mathbb T}
+\newcommand{\R}{\mathbb R}
+\newcommand{\e}{\mathrm e}
+\newcommand{\sg}{\operatorname{sg}}
+\newtheorem{fieldtheorem}{Theorem}
+\newcommand{\mean}{\operatorname{mean}}
+\makeatletter
+\newenvironment{inplace}[1]{\par\addvspace{10pt}\noindent\begin{minipage}{\linewidth}\def\@captype{#1}}{\end{minipage}\par\addvspace{10pt}}
+\makeatother
+\AddToHook{env/figure/before}{\par}
+\AddToHook{env/figure/after}{\par}
+\AddToHook{env/table/before}{\par}
+\AddToHook{env/table/after}{\par}
+\newcommand{\uflowone}{53.13}\newcommand{\uflowfive}{80.47}
+\ifdefined\pdfstartlink
+  \newcommand{\linkto}[2]{\leavevmode\pdfstartlink attr {/Border [0 0 0]}
+    user {/Subtype /Link /A << /S /URI /URI (\pdfescapestring{\detokenize{#1}}) >>}#2\pdfendlink}
+\else
+  \usepackage[hidelinks]{hyperref}\newcommand{\linkto}[2]{\href{#1}{#2}}
+\fi
+\ifdefined\pdfoutline
+  \newcommand{\crytalmark}[2]{\pdfdest name {#1} xyz\pdfoutline goto name {#1} {#2}}
+  \newcommand{\crytaljump}[2]{\leavevmode\pdfstartlink attr {/Border [0 0 0]} goto name {#1}#2\pdfendlink}
+\else
+  \newcommand{\crytalmark}[2]{\pdfbookmark[1]{#2}{#1}}
+  \newcommand{\crytaljump}[2]{\hyperlink{#1}{#2}}
+\fi
+\title{\vspace{-2em}\bfseries CrytalDrift\\[2pt]\large One-step generation of periodic crystal structures}
+\author{AmirM.MohammadHosseini\\[-1pt]\small Department of Biotechnology, University of Tehran}
+\date{}
+\ifdefined\pdfinfo
+  \pdfinfo{/Title (CrytalDrift - One-step generation of periodic crystal structures)
+           /Author (AmirM.MohammadHosseini)
+           /Subject (One-step geometric generation, MP-20 and physical plausibility)}
+\fi
+\begin{document}
+\crytalmark{article}{CrytalDrift -- Research article}
+\maketitle
+\vspace{-1.4em}
+\begin{abstract}
+Can a one-step crystal generator recover more structures by spending its inference budget on additional proposals? CrytalDrift adapts a training-time attraction--repulsion objective to generate a lattice and all fractional sites jointly in one network evaluation given the unit-cell composition. Its field acts on log lattice metrics and periodic Fourier products. On all 9,046 MP-20 test targets, twenty drifting proposals recovered 32.91\% of structures, compared with 36.54\% for compact 16-step flow. The ordering reversed at a measured 100\,ms serial deadline on 128 full-chemistry targets. Drifting recovered 27 targets and 16-step flow recovered six. Dedicated compact MeanFlow recovered 33, released one-step uFlowCSP recovered 41, and training-template retrieval recovered 88. Generating 10,000 structures took 7.14 seconds for drifting and 53.29 seconds for compact 16-step flow. On 512 independent Alexandria targets, one retrieval draw and nineteen drifting proposals recovered 39.39\%, against 24.41\% for retrieval alone. For de novo generation we fit a separate multielement composition prior. Of 10,000 draws, 6,478 had a reduced formula absent from training. Across all 10,000 shared composition draws, drifting and 16-step flow each achieved about 91\% structural validity, yet their coverage recalls were 49.83\% and 67.62\%. One of sixteen consecutive learned-prior drifting proposals passed relaxation, restricted-hull energy, uniqueness and novelty criteria. For independent banks of fixed size, we prove that the expected normalized drift tends to zero as the generated feature laws converge weakly to the reference laws and exhibit two inequivalent eight-site structures with identical trained fingerprints. These results identify time budgets at which one-call proposals help and geometric information the training representation loses.
+\end{abstract}
+
+\section{One-step generation of crystal structures}
+A chemical composition can admit several crystal structures. At a fixed sampling budget, a generator can spend time refining one candidate or proposing another. Drifting models learn a direct map from noise to a sample by comparing generated and observed examples during training \cite{deng}. Here the sample consists of a lattice and all atomic sites in its unit cell. We ask how to define the training signal for such an object, and how much structure a one-call generator recovers in a given time.
+
+The same crystal can be recorded with a different origin or a different ordering of identical atoms. This matters for drifting because each update compares independently represented crystals. SymDrift showed why an equivariant generator alone does not generally make a coordinate-space training field agree with that of a symmetry-averaged target, and proposed alignment or invariant features for molecular data \cite{symdrift}. We take the feature approach for periodic crystals. Our generator is a compact set network with a shared multilayer perceptron at each site. The crystal-specific adaptation lies in the representation on which the drifting field acts: the cell metric and species-resolved Fourier products of the fractional sites. We prove that these features give exactly the same training field under independent origin choices in a finite batch. We then ask which genuinely different crystals remain distinguishable.
+
+DiffCSP, FlowMM and CrystalFlow model periodic coordinates with diffusion or flow matching \cite{diffcsp,flowmm,crystalflow}. Wyckoff Transformer and WyckoffDiff generate discrete descriptions of space-group orbits \cite{wyformer,wyckoff}. CrystaLLM generates crystals as sequences of CIF tokens \cite{crystallm}. Our network takes the exact elemental multiset in the unit cell and generates its lattice and occupied sites directly. For de novo sampling we first draw the multiset from a fitted prior. One-step uFlowCSP provides a mean-flow comparison, and OMatG-flash motivates testing additional proposals within a time budget \cite{uflow,omatg}. Our comparisons include dedicated one-step and iterative predictors and training-template retrieval.
+
+\section{Drifting on periodic crystal structures}\label{sec:periodic-drift}
+\subsection{The training field and the choice of origin}
+Let $X=(G,F)$ denote one crystal of prescribed cell composition $c$, with row lattice $L$, metric $G=LL^\top$ and fractional site rows $f_j\in\T^3=\R^3/\mathbb Z^3$. A generator $g_\theta(c,\xi)$ maps noise $\xi$ to $X$ in one call. To train it, choose a feature map $\Phi$. For a generated query with feature $x_i=\Phi(X_i)$, form two banks: observed features $y_j^+$ and features $y_j^-$ of independent draws from the generator. If $A_{ij}^\pm$ are the affinities to the two banks and $m_i^\pm=\sum_j A_{ij}^\pm$, the field at one temperature is
+\[
+ v_i=m_i^-\sum_j A^+_{ij}y_j^+-m_i^+\sum_j A^-_{ij}y_j^- .
+\]
+This is the difference between the affinity-weighted positive and negative centroids, multiplied by $m_i^+m_i^-$. We use the geometric mean of row and column softmaxes of $-\|x_i-y_j\|/\tau$ over the joined bank. In the pooled binary protocol we also subtract half the squared chemical distance from each logit. We normalize the field by its regularized batch RMS at $\tau=0.3$ and $0.8$ and average to obtain $V_i$. The regression target is $\sg(x_i+V_i)$, where $\sg$ holds its argument fixed during differentiation. Sampling only calls $g_\theta$.
+
+Consider this rule applied directly to fractional coordinates. Along one lattice axis put two distinct species at $(0,1/4)$. Take the query and one reference of each sign to be copies of this crystal. The two references coincide, so $v_i=0$. Now record the positive reference with an origin shift of $1/4$, giving $(1/4,1/2)$. Its separation and lattice are unchanged, yet the raw-coordinate field becomes $m_i^+m_i^-(1/4,1/4)\ne0$. The positive affinities give a displacement even when the two references describe the same geometry. This example motivates a field whose value is independent of the origin used for each crystal.
+
+\subsection{A drifting field independent of the periodic representation}
+We work in the deposited lattice basis. Store the six entries of $S=\tfrac12\log G$, with off-diagonal entries multiplied by $\sqrt{2}$ to preserve the Frobenius norm, then standardize them using training data. A Cartesian change of orthonormal frame preserves $G$. For a species $s$ with $n_s$ sites and an integer wavevector $h$, set
+\[
+ A_s(h;F)=\frac1{n_s}\sum_{j:z_j=s}\exp(2\pi\mathrm{i}\,f_jh).
+\]
+The binary descriptor uses cross-powers $\overline{A_a(h)}A_b(h)$ and, for multisite cells, species powers and selected triples of the form $A_s(h)A_s(k)\overline{A_{s'}(h+k)}$. The multielement descriptor uses species powers and cross-powers with the mean over all sites and with the lowest-atomic-number species. Both include the standardized lattice features. We use 13 integer wavevectors. The component lists and block scalings are given in Sections~\ref{s:fingerprint} and~\ref{s:scaled} of the supplement.
+
+\begin{fieldtheorem}[Periodic symmetries of the training field]\label{thm:periodic-field}
+Fix the composition and lattice-basis convention of each crystal. Choose a common fractional origin shift separately for every query, positive reference and negative reference, and reorder its sites within each species in any way. Then every computed feature drift $V_i$ and every detached feature target are identical before and after these transformations. The conclusion holds for each finite batch and also for any choice of integer lifts of its fractional coordinates.
+\end{fieldtheorem}
+\noindent\emph{Proof.} An origin shift by $t$ multiplies $A_s(h)$ by $\exp(2\pi\mathrm{i}\,th)$ for every species. The two phases cancel in a cross-power. In a triple they cancel because its third wavevector is the sum of the first two. Permuting like sites only reorders each species sum. Integer shifts of individual fractional coordinates contribute phase one. The cell metric and the chemical labels are fixed throughout. Thus each query and reference has its original feature vector, so every affinity, bank mass, displacement, and batch normalization is identical. This gives the assertion for $V_i$ and for $\sg(x_i+V_i)$. \hfill$\square$
+
+\paragraph{How a site displacement transforms.}
+The field $V_i$ lives in feature space. At any differentiable query the direction passed back to the fractional sites by the detached loss is $U_F=(D_F\Phi)^\top V_i$, using the usual inner product on the fractional coordinates. Write $F'=PF+\mathbf 1t^\top\bmod 1$ for a like-species permutation $P$ and a common shift $t$. Differentiating $\Phi(G,F')=\Phi(G,F)$ and using $P^\top P=I$ gives $U_{F'}=P U_F$. In particular, summing the site directions gives $\sum_j(U_F)_j=0$, since the derivative of $\Phi$ along any common translation vanishes. The field is computed from the features during training. The learned network is the generator, and sampling a structure requires no evaluation of $V_i$.
+
+In particular, independently randomizing the origins of all records and uniformly shuffling like atoms would give exactly the same feature values on the same draws. Training can therefore use the records as deposited. The theorem fixes the integer lattice basis: a unimodular basis change generally alters both the six stored cell coordinates and the indices in the finite Fourier set. Likewise, a generated structure may have a particular space group, but the model imposes no space group or Wyckoff assignment.
+
+\subsection{What the field teaches the generator}
+The site encoder shares its weights across atoms and takes element embeddings and relative periodic phases as inputs. The cell head pools site embeddings and predicts six standardized log-metric coordinates with a $0.15$ residual on Gaussian cell noise. The site head predicts displacements from uniform site noise $u_j$, returning $f_j=(u_j+\tfrac12\tanh d_j)\bmod 1$. After undoing standardization, $\exp S$ or a Cholesky factor of $\exp(2S)$ realizes the cell. The multisite binary network has 19,733 parameters. The full MP-20 network has 24,377. The generator is \emph{equivariant}: shifting the site noise by $t$ shifts its output sites by $t$, and permuting like input sites permutes their outputs. Relative phases and pooled context are unchanged, which gives both identities (supplement, Proposition~1 and Section~\ref{s:scaled}). Thus the outputs transform with the input representation, while Theorem~\ref{thm:periodic-field} ensures that their training comparison is invariant.
+
+How much geometry survives this comparison? For one atom of each of two species, $\overline{A_a(e_\ell)}A_b(e_\ell)=\exp[2\pi\mathrm{i}(f_b-f_a)_\ell]$ along each coordinate axis. Its phase recovers the relative motif up to a common origin, and the six cell entries recover the fixed-basis metric. For eight sites there are two inequivalent binary motifs that agree in all 70 binary features and all 1,306 multielement features (supplement, Propositions~2--3 and Section~\ref{s:ablation}). The construction uses a classical homometric pair \cite{zrelation}. One additional collinear triple distinguishes these motifs. Section~\ref{sec:revision-ablation} tests whether adding it improves prediction on held-out crystals.
+
+Finally, if the conditional feature laws agree and the observed and generated reference banks are independent with the same conditional product law, exchanging the banks preserves their joint law and reverses $V_i$. The expected drift is therefore zero. For fixed queries and finite independent banks it also tends to zero under weak convergence of the generated feature laws to the observed ones (supplement, Propositions~5--6). This equilibrium statement concerns distributions in feature space. The eight-site example shows why it cannot establish equality of general crystal distributions. The geometric invariance in Theorem~\ref{thm:periodic-field} applies to either bank sampler, including the original shuffled-anchor protocol.
+
+\begin{inplace}{figure}
+\centering\includegraphics[width=\linewidth]{exp-method.pdf}
+\caption{Each chemical input defines the number and species of the generated sites. One network call returns their fractional positions and the cell metric. The inset shows an actual learned-prior draw. Below, positive and negative reference structures enter the training loss through periodic features. The original and independent-positive protocols differ in how the first positive is sampled.}
+\label{fig:workflow}
+\end{inplace}
+
+\section{Protocols and controls}
+The original pooled binary protocol uses 64 queries and 64 references of each sign. Exact-composition training uses 16 composition blocks with four queries and four references of each sign in each block. A singleton training composition supplies one distinct observed geometry.
+
+We use the WyckoffDiff release of MP-20, preserving its official split and unpacking all explicitly listed sites in its P1-form CIFs \cite{wyckoff}. The two-atom cohort has 512/171/189 train/validation/test structures. The overlapping two-to-eight-site binary cohort has 3,630/1,231/1,229. Of the test cell compositions, 32/189 and 239/1,229 entries respectively have an exact match among training compositions. The larger cohort includes five training cells reducible by a common translation at fractional tolerance $10^{-5}$. We retained the released cells. We fit separate models to each cohort. All cells encode their elemental counts exactly.
+
+We use periodic conditional flow matching with a compact learned velocity field, evaluated in one, four (two-site only) or 16 Euler steps. The flow and drift runs each use 1,200 AdamW updates, 64 query crystals per step, learning rate $10^{-3}$ and seeds 11, 23 and 37. Drifting also evaluates generated reference examples. The two-site and multisite flows have 16,793 and 22,353 parameters. Matching training steps does not equalize floating-point work. Retrieval samples training structures of the requested composition when available. Its fallback preserves ordered multiplicities when possible and otherwise preserves site count. Within that set the binary rule minimizes the sum of the absolute differences between the two ordered pairs of distinct atomic numbers, counting each element once. Donor sites take the requested elements. Retrieval uses no target geometry. Such simple controls can be strong in materials discovery \cite{retrieval}.
+
+For structure recovery we use \texttt{pymatgen} StructureMatcher with $\texttt{ltol}=0.3$, $\texttt{stol}=0.5$ and $10^\circ$ angular tolerance \cite{pymatgen,diffcsp}. The primary test calls \texttt{get\_rms\_dist} with primitive reduction and isotropic volume scaling. It accepts a candidate if the routine returns a match. All draws remain in their original order, including failures. For $k\in\{1,5,20\}$ we score each target against its own first $k$ candidates. MR@$k$ is the fraction of all targets with a match. For each matched target we take its smallest accepted RMS displacement, normalized by the per-site length $(V/n)^{1/3}$ in the matcher's average lattice, then compute the mean over these targets within each seed. Each fitted seed receives equal weight in the reported means. The set entering the RMS statistic can change with $k$ or model. We use paired target bootstraps conditional on the fitted seeds and report the individual seed results in the accompanying data.
+
+The principal binary cohort contains the 128 smallest SHA-256 digests of material IDs in the 1,229-record binary MP-20 test set. The full-chemistry experiment evaluates the 9,046 official MP-20 test records separately. Two sensitivities use the same proposed structures. The first calls \texttt{fit}, which tests the maximum normalized site displacement. The second requires an RMS match and a native volume ratio in $[1/1.10,1.10]$ on that same candidate. Volume is measured before any matcher rescaling. The factor 1.10 is an audit threshold. None of the match definitions uses relaxation or prospective ranking.
+
+The prespecified endpoint in the original binary study was the conditional energy score for volume per atom and shortest periodic interatomic distances. It retains the absolute length scale that the matcher removes. The score, bootstrap and finite-ensemble protocol appear in Appendix~\ref{sec:impl}. The initial binary test results motivated exact-composition banks. We fixed that revision before using the original validation split as follow-up. Validation determined the feature-ablation choice, compact training duration and de novo prior smoothing. The present cost comparison evaluates recovery both at fixed ordered prefixes and within actual elapsed-time budgets.
+
+\input{exp-context}
+
+\section{Composition-conditioned prediction on full MP-20}
+Our primary comparison supplies each generator with the same 9,046 held-out elemental multisets. The multielement network accepts up to twenty sites. Its 1,306-component fingerprint concatenates the six cell coordinates with species power spectra and correlations against the entire motif and the lowest-atomic-number species. Its 24,377-parameter backbone is shared with compact flow. These pair products retain a common-origin symmetry and inherit the eight-site collision shown in the supplement. Each candidate is scored in the deposited order before relaxation. Figure~\ref{fig:exp-gpu} provides the corresponding measured-time comparison for the 128-target timing cohort.
+\input{exp-training}
+\input{exp-gpu}
+\input{exp-external}
+\input{exp-volume}
+\input{exp-hybrid}
+
+\section{Binary structure prediction and feature ablations}
+\input{revision-benchmark}
+\input{revision-sensitive}
+\input{revision-ablation}
+
+\input{scale-results}
+
+\section{De novo generation across multielement MP-20}\label{sec:multi-denovo}
+\input{exp-denovo}
+\input{exp-screen}
+\input{exp-screen-joint}
+\input{exp-dft}
+
+\section{The original binary de novo subset}\label{sec:denovo}
+For a separate de novo experiment, sample $c$ with an inexpensive fitted prior. Half its mass is the empirical distribution of exact training cell compositions. For the other half, draw the ordered pair of multiplicities from training and combine the empirical lower- and higher-atomic-number element marginals for those multiplicities, conditioning on $Z_a<Z_b$. Sampling this finite distribution followed by one call to the multisite exact-composition generator requires no reference target or donor coordinates. The prior deliberately reuses known binary chemistry. Its choice is part of the generation protocol, separate from the learned geometric field.
+
+Among 1,024 unfiltered draws (seed 71413, checkpoint seed 11), 341 had a reduced chemical formula absent from the restricted training cohort and 395 had an unseen exact cell composition. There were 911 distinct reduced formulas. Twenty-one candidates had a periodic interatomic contact below 0.5\,\AA. Figure~\ref{fig:unseen} shows four formulas absent from the restricted training set. Such a formula can already be known elsewhere. The following screen uses the first 32 generated cells, including failures.
+
+\input{revision-denovo}
+
+\input{plausibility}
+
+\section{Discussion and conclusions}
+Moving the attraction--repulsion update into training makes one network evaluation sufficient to propose a lattice and all fractional sites. This matters when there is time to finish several proposals. On our GPU, the compact drifting network recovered 27 targets at a 100\,ms deadline, against six for 16-step flow. Dedicated single-call MeanFlow recovered 33, released uFlowCSP recovered 41, and retrieval recovered 88. Neural evaluations count calls of unequal cost. On the official split, a train-only estimate of native volume raised the five-draw volume-qualified recovery from 7.58\% to 16.31\%, while scale-normalized recovery stayed at 20.33\%. Attributing a gain to the drifting objective therefore requires specifying the comparison model, clock or draw budget, and geometry being measured.
+
+The eight-site example gives an exact account of a limitation of feature-space training. We identified and added a missing phase-sensitive statistic. Its inclusion changed neither test geometric score nor five-draw recovery detectably at the training budget studied here. Removing the existing triples improved the absolute-geometry score on validation and test, with an inconclusive change in test recovery. Matching more Fourier moments can therefore solve a representation problem without improving the finite-data generator. Sampling all positives independently closes a different gap between the finite-bank proof and the training schedule. Its twenty-draw recovery was 32.98\%, versus 32.91\% for the shuffled-anchor arm. The paired interval for shuffled minus independent sampling was $[-0.25,+0.12]$ percentage points. The proof tightens the interpretation of the field even where this sampler change yields no resolved performance gain.
+
+Retrieval and generation recover different structures. On the independent Alexandria cohort, one retrieval draw and nineteen drifting proposals gained 14.97 points over twenty retrieval draws. The 16-step hybrid did better at the same draw count. In unconditional generation, the learned prior reached new formulas at a measurable cost in chemical validity. On the same learned composition draws, both compact generators passed the minimum-distance test about 91\% of the time. Drifting covered 49.83\% of the full test reference, against 67.62\% for 16-step flow. Among sixteen consecutive draws per arm, joint CrystalFlow produced five hits against our finite CHGNet phase library and the learned-prior drifting pipeline produced one. Longer relaxation, additional competing phases and first-principles energies of all competing phases could change those labels. For a preselected MgGa$_3$ composition, first-principles forces decreased strongly after CHGNet relaxation. Both cells retained substantial residual forces and their relative energy ordering reversed between wavevector meshes. The evidence supports a compact source of inexpensive geometric proposals. It also identifies coverage of distinct motifs and fidelity to native lattice volume as limits on what this representation achieves.
+
+\paragraph{Code and acknowledgments.} The accompanying reproducibility package includes training and sampling code, checkpoints, split identifiers, timing observations, per-target predictions and the CIF generation and relaxation protocols. Model and test costs are tied to the specified hardware, software, batching and candidate budgets. OpenAI Codex assisted with literature search, implementation, experiment execution, analysis and manuscript drafting.
+\input{bibliography}
+\clearpage
+\crytalmark{mathematics}{Mathematical supplement -- Geometry and training}
+\input{supplement}
+\clearpage
+\appendix
+\crytalmark{experiments}{Additional experimental evidence}
+\section{Additional experimental details}\label{sec:impl}
+\input{timing-table}
+\input{binary-table}
+
+An independent geometric assessment keeps absolute length scale. Measure log volume per atom and log shortest periodic A--A, A--B and B--B distances, including images of the same atom. Count the repeated like-species distance once in the two-site case. Standardize on training observations. For target $y$ and features $x_1,\ldots,x_M$, use the empirical energy score \cite{energy}
+\[
+ M^{-1}\sum_i\|x_i-y\|-\frac{1}{2M^2}\sum_{i,j}\|x_i-x_j\|.
+\]
+Lower is better. This statistical score measures ensemble fidelity in four or three dimensions. It is unrelated to physical energy. We use 20 candidates for all 189 two-site targets and five for all 1,229 multisite targets. Case-bootstrap intervals condition on the three fitted models.
+
+The Fourier descriptor has a simple coordinate-seam check. Two relative displacements of length 0.02, one across the periodic boundary and one away from it, had equal feature-space distance 0.110055. The raw-chart ablation gave distances 1.96 and 0.04. Reordering atoms and shifting the common origin in a multisite test changed the double-precision descriptor by at most $1.1\times10^{-15}$. Swapping the positive and negative banks of the pooled implementation negated its field to $1.2\times10^{-16}$. These checks concern the computational representation. Geometric validity and final generator performance were evaluated separately.
+
+\paragraph{Effect of geometry and conditioning.} On two-site test structures, the initial pooled Fourier drift improved the energy score over drifting on wrapped raw relative coordinates by $0.159$ (paired 95\% case bootstrap $[0.137,0.180]$). The larger-cohort pooled model scored 3.602, versus 4.069 for one-step flow, 3.339 for 16-step flow and 0.657 for retrieval. Pooled drifting also produced substantial log-volume errors. This prompted the exact-composition reference protocol. It reduced test score by 0.326 in the two-site cohort and 0.133 in the larger cohort. With the models and protocols fixed, the previously unused validation structures showed reductions of 0.327 $[0.244,0.415]$ and 0.153 $[0.116,0.190]$. These are empirical effects of changing the reference protocol, including the effective batch grouping. Differences between seed fits and finite ensembles remain sources of uncertainty.
+
+\paragraph{Earlier timing configurations.}
+The original binary fit required 8.78--9.14 seconds for 1,200 multisite drifting updates and 4.68--5.22 seconds for the compact flow on one CPU thread. Fitting the empirical prior over 28,327 binary cell compositions took 0.117 seconds after loading training data. With the prior and network warm, a de novo proposal including composition sampling took 0.940\,ms at batch one and 4.388\,ms for a batch of 256 on the same thread. File output and CHGNet relaxation were outside the timing boundary. These earlier runs use different thread counts and batches from the main comparison.
+
+\section{Per-seed recovery and multielement geometric scores}
+\input{exp-seeds}
+\input{exp-denovo-strata}
+\input{revision-seeds}
+For each target, compute log volume per atom and the minimum, median and 90th percentile of its sites' nearest periodic neighbor distances. Use the source training set for the four feature scales. Relative to the binary protocol, the scaled experiments use five candidates and the distinct-pair ensemble spread denominator $2M(M-1)$ to estimate the population energy score. Only like-protocol scores are compared. The displacements include nonzero images of an atom itself. A reciprocal-metric bound certifies each search.
+\begin{center}\small
+\begin{tabular}{lrrrr}\hline
+Training to evaluation & CrytalDrift & Flow (1) & Flow (16) & Retrieval\\\hline
+MP-20 to MP-20 & 2.896 & 3.163 & 2.846 & 0.541\\
+WBM to WBM & 3.592 & 4.012 & 3.354 & 0.300\\
+MP-20 to WBM & 2.979 & 3.331 & 2.900 & 0.787\\\hline
+\end{tabular}
+\end{center}
+Lower scores indicate greater fidelity on these four measurements. The WBM row averages the three independent fits. The released uFlowCSP model scored 0.981 on the 128 MP-20 targets and 0.942 on the 128 WBM targets using the corresponding dataset's training scales. These fixed-cohort energy scores use five draws and address absolute geometry, including volume.
+
+\clearpage
+\section{Generated formulas absent from training}
+Selection for Figure~\ref{fig:unseen} depends only on draw order and chemistry. Predicted relaxation energies and forces were unavailable to the selection rule.
+\begin{inplace}{figure}
+\centering\includegraphics[width=.96\linewidth]{unseen-examples.pdf}
+\caption{First four distinct reduced formulas in the screened set absent from the restricted training data. Selection used only formula and draw order. All four met the optimizer's stopping rule. CuAu$_4$ and Ag$_3$Bi remained above their relaxed elemental mixtures by 0.036 and 0.040\,eV/atom. VBr$_2$ and AuS were below by 1.081 and 0.093\,eV/atom. CuAu$_4$ and VBr$_2$ each have a same-formula reference in the larger release.}
+\label{fig:unseen}
+\end{inplace}
+\end{document}

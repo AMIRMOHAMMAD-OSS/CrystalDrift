@@ -1,0 +1,20 @@
+\paragraph{Released iterative and joint generators.}
+For an iterative comparator we used the released MP-20 CrystalFlow composition-conditioned checkpoint \cite{crystalflow}. Its 20,943,872-parameter decoder receives the supplied elements, fractional coordinates and six coordinates of the current lattice stretch. Dey et al.\ examined a five-step budget on CSPBench \cite{uflow}. Our local five-step replay uses unguided Euler updates and the sampler's default unit site-velocity multiplier. The authors' released evaluation command uses 100 updates and multiplies the site velocity by $1+5t$. The only target input is the exact cell composition. The released CrystalFlow test file contains exactly the same 9,046 material IDs as our MP-20 split.
+On two test cells at each setting, equal initial noise gave identical fractional positions and species with the authors' complete sampler. The largest absolute lattice-entry difference was below $10^{-6}$~\AA.
+With deterministic CUDA reductions, the two five-step implementations also returned identical species and fractional sites in both precision modes. Ordinary CUDA reductions can vary across repeated runs. The archives retain the draws used for scoring.
+
+\begin{center}\small\begin{tabular}{rrrrrrr}\hline
+$k$ & $S$ & $kS$ & MR (\%) & Best RMS & Max-site (\%) & MR + volume (\%)\\\hline
+1 & 5 & 5 & 58.14 & 0.2319 & 36.99 & 14.27\\
+5 & 5 & 25 & 77.45 & 0.1863 & 56.72 & 48.31\\
+20 & 5 & 100 & 85.87 & 0.1563 & 69.02 & 75.90\\
+\hline\end{tabular}\end{center}
+Each row uses the 9,046 public MP-20 test targets and the same primitive-cell, scale-normalized matcher as the compact models. The native-volume column applies the factor-of-1.10 rule to the same candidate as the RMS match. This single released checkpoint used one ordered noise schedule and FP32 tensors with TF32 matrix multiplication on an RTX 3060 Laptop GPU.
+At 20 draws the paired recovery difference from the original one-pass multielement CrytalDrift was $+52.96$ percentage points (95\% target-bootstrap interval $[51.96,53.98]$).
+On the separate matched GPU workload, five-step CrystalFlow took 143.08 ms per serial candidate (median) and 0.88 minutes per 10,000 candidates at batch size 24. All timed GPU arms used FP32 with TF32 disabled.
+We repeated the first draw on the 128 hash-selected multielement targets from the same initial noise with the authors' 100-step, annealed sampler. The five-step, unannealed run recovered 70 targets and the published recipe recovered 90. Mean normalized RMS among the 69 targets recovered in both runs changed from 0.2354 to 0.0800.
+The comparison changes the integration resolution and the site-velocity schedule together.
+Holding the site-velocity multiplier at one, raising the update count from five to 100 changed recovery from 70 to 80 targets. With annealing enabled at both resolutions, the corresponding counts were 11 and 90. All four cells use the same 128 targets and starting noise.
+
+For joint generation, we score the authors' separate unconditional CrystalFlow model from its deposited sequence of raw structures \cite{crystalflow}. We checked the species-aligned fractional positions and native lattice against an independent pymatgen POSCAR reader on 100 hash-selected nonempty entries and found identical values. [\linkto{https://doi.org/10.6084/m9.figshare.29978608.v3}{Source structures}]
+We also ran the released unconditional checkpoint locally on 10,000 fresh draws. It samples the site count from its published MP-20 prior and jointly evolves lattice, sites and a 28-channel periodic-table encoding for 100 evaluations. The complete batch-24 workload took 29.33 minutes on the same GPU, including atom-type decoding and host coordinates. These timing and quality records refer to the newly generated draws.

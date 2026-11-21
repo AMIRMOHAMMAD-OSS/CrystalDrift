@@ -1,0 +1,142 @@
+\section{Periodic invariance, finite reference banks and identifiability}\label{app:proofs}
+\label{app:periodic-field}
+
+\subsection{Equivalent descriptions of a crystal}
+The lattice \(L\) is an invertible \(3\times3\) matrix whose rows are lattice vectors in angstroms. A site of species \(z_i\) at fractional row \(f_i\) represents the physical positions \((f_i+n)L\), \(n\in\mathbb Z^3\). When a template is used, \(a(i)\) also records the occupied orbit containing site \(i\). Two descriptions of the same decorated crystal and transported orbit partition can be related by
+\begin{equation}
+ L'=ULQ,\qquad f'_{\pi(i)}= f_iU^{-1}+t-w_i,\qquad
+ z'_{\pi(i)}=z_i,\qquad a'(\pi(i))=\rho(a(i)).
+ \label{eq:drift-group}
+\end{equation}
+Here \(U\in{\rm GL}(3,\mathbb Z)\) changes the basis of the same lattice, \(Q\in{\rm O}(3)\) changes the Cartesian frame, \(t\) translates the fractional origin and \(w_i\in\mathbb Z^3\) wraps the site. The permutations \(\pi,\rho\) reorder sites and rename orbits. This action includes reflections and keeps cell multiplicity fixed. A supercell changes that multiplicity. A different choice of subgroup can change which sites belong to the same orbit even when the atomic structure is held fixed.
+
+The descriptor must tolerate a separate choice of Eq.~\eqref{eq:drift-group} for each query and reference. For example, the raw Frobenius distance from \(I\) to itself is zero. If one rewrites just the reference with \(U=I+e_1e_2^\top\), the distance becomes one. An affinity on the two raw matrices would assign the same cubic crystal two different attractions.
+
+\subsection{Physical feature maps}
+For a directed image displacement \(d=(f_j-f_i+n)L\) we use the full physical neighbor list \(\|d\|<R\), \(R=4\,\text{\AA}\). The list omits only \(j=i,n=0\). With \(S\) radial shells and \(s=0,\ldots,S-1\), the weight is
+\[
+ b_s(x)=\begin{cases}
+ \exp\!\left(1-\dfrac{1}{1-x}-\dfrac{((S-1)x-s)^2}{2}\right),&0\leq x<1,\\[4pt]
+ 0,&x\geq1 .
+ \end{cases}
+\]
+All derivatives of the cutoff envelope approach zero at the boundary. The pair descriptor records \(\log|\det L|\), counts of the 118 elements, two shell sums for nonzero lattice translations and two shell sums for each unordered species pair at distinct sites, using \(x=\|d/R\|^2\). The last sums count both directed orientations and divide by \(2N\), where \(N\) is the number of occupied sites. Within an exact formula the implementation orders the elements by atomic number and reserves seven slots. Thus the pair descriptor has \(1+118+2+2\binom{8}{2}=177\) entries.
+
+The center-wise features retain information about neighbors that share an atom. The angular coefficients for neighbor species \(z\) and shell \(s\) are sums of the real regular solid harmonics \(Y_\ell\),
+\[
+ c_{i,z,s,\ell}=\sum_{j,n:z_j=z} b_s(\|d/R\|^2)\,Y_\ell(d/R).
+\]
+For each center \(i\), the descriptor takes inner products of the coefficients for all pairs of neighbor species and shells, then averages them over centers of the same species. With \(S=2\), there are 14 species--shell combinations and \(7(14)(15)/2=735\) entries per order. Retaining only \(\ell=0\) gives a 912-component radial descriptor. Including \(\ell=0,1,2\) gives the 2,382-component angular descriptor. This finite local power spectrum is related to the construction of Bart\'ok et al.~\cite{soap}.
+
+The following four comparisons each append one block to the same angular descriptor.
+
+\paragraph{Variation among comparable orbits.}
+For each site and each order \(\ell=0,1,2\), the untyped harmonic sum uses weights \((1-\|d/R\|^2)_+^3\). Its squared norm is averaged within each occupied orbit. Orbits with the same species and multiplicity form a class. The mean squared deviation of the orbit values from their respective class means, averaged over all occupied orbits, contributes one feature per order.
+
+\paragraph{Contacts between occupied orbits.}
+Two distinct occupied orbits \(a,b\), with \(m_a,m_b\) sites, have three contact-shell features,
+\[
+ H_{ab,s}=\frac{1}{m_am_b}\sum_{i\in a,\;j\in b,\;n}
+ b_s\!\left(\|(f_j-f_i+n)L/R\|^2\right),\qquad S=3 .
+\]
+An implementation that visits both orientations divides by \(2m_am_b\). The type of an unordered pair records its two element ranks, whether its multiplicities are equal, and whether both exceed one. For each type, the descriptor averages \(H_{ab,s}\) and \(H_{ab,s}^2\) over all its pairs. A pair with no contacts contributes zero, and an empty type receives zero in every shell. The block has \(28\cdot4\cdot6=672\) components. With two oxygen sites at \((\pm0.1,0,0)\) in a cubic cell of side \(6\,\text{\AA}\), a \(P1\) template has two singleton orbits with a contact at \(1.2\,\text{\AA}\). A template that groups them under inversion has just one orbit. This illustrates why the orbit partition is an argument of this feature.
+
+\paragraph{Cross intensities in reciprocal space.}
+For each nonzero integer column \(h\), \(q=L^{-1}h\) is its reciprocal vector in cycles per angstrom. For species \(z\) of population \(m_z\), let \(s_z(h)=m_z^{-1}\sum_{i:z_i=z}\exp(2\pi\mathrm{i} f_i h)\), with value zero for an absent species. The three shells for each unordered species pair are
+\[
+ E_{zz',s}=\frac{\sum_{0<\|q\|<q_c} b_s(\|q/q_c\|^2)
+             {\rm Re}\{s_z(h)\overline{s_{z'}(h)}\}}
+             {|\det L|\,(4\pi q_c^3/3)},\qquad q_c=0.35\,\text{\AA}^{-1}.
+\]
+There are \(28\cdot3=84\) entries. The sum includes both signs of each \(h\). Since \(h=Lq\), the bound \(|h_j|\leq\|L_{j:}\|q_c\) provides a finite enclosing box for each cell. Selecting by physical length inside this box makes the cutoff independent of the lattice basis. The normalization is also defined when the sphere contains no nonzero reciprocal vector.
+
+\paragraph{Higher radial resolution.}
+The radial control repeats the distinct-site species-pair shell sum with \(S=4\) and appends all \(28\cdot4=112\) entries. The two original shells and the angular orders remain in the base descriptor. Each block of each map is centered at its training mean and divided by the training root mean squared Euclidean norm about that mean, with a floor of \(0.01\).
+
+\subsection{Proof of Theorem~\ref{thm:field}}\label{app:field-proof}
+\emph{Proof.} The integer substitution \(n'=nU^{-1}+w_j-w_i\) gives a bijection between the image displacements in the two descriptions, with \(d'=dQ\). It preserves the excluded self image, all physical lengths and every species class. Thus it permutes the terms of the pair and lattice shell sums. Each harmonic coefficient transforms by the orthogonal degree-\(\ell\) representation of \(Q\). Even when \(Q\) reverses orientation, the parity factors cancel in the inner product of two coefficients of the same order. Site and orbit permutations therefore preserve all power, pooling and variance operations. The unordered contact moment also survives exchanging \(a,b\), which reverses each displacement and preserves its length. Finally \(|\det L'|=|\det L|\).
+
+For the reciprocal map, \(h'=Uh\) gives \(q'=Q^\top q\). The same set of physical lengths enters the sum after reindexing. The integer wraps contribute unit phase; the shift \(t\) multiplies every \(s_z(h')\) in the transformed structure by the same phase relative to \(s_z(h)\). Conjugation cancels it between the two factors. The fixed training means and scales preserve all these equalities. Every distance, normalized weight and linear combination computed from those vectors is consequently unchanged. \(\square\)
+
+This is invariance of the comparison in feature space. If the generator sends corresponding seeds to corresponding outputs for each value of its parameters, the query features are equal as functions of those parameters. Wherever differentiable, their parameter Jacobians are then equal too. At fixed \(L\) a Cartesian-coordinate covector \(g_x\) and the fractional-coordinate covector satisfy \(g_f=g_x L^\top\) in the row convention. The physical coordinate velocity, in units of length, has a different transformation law from this fractional derivative.
+
+\subsection{The finite-bank result and its assumptions}
+At a single temperature let \(k_{ij}=K_T(X_i,Y_j)\). Normalizing jointly over both signs of the reference bank \(Y\) and over the queries of the same anchor gives
+\[
+ A_{ij}=\frac{k_{ij}}{\sqrt{(\sum_u k_{uj})(\sum_v k_{iv})}} .
+\]
+The positive and negative weights in Eq.~\eqref{eq:bankdirection} are the two column blocks of \(A\). Replacing \(y_j\) by \(y_j-x_i\) in that equation gives the same result because the net coefficient of \(x_i\) is zero. With \(M\) queries summed across all anchors in a batch, the objective is
+\[
+ V_i=\frac1{|\mathcal T|}\sum_{T\in\mathcal T}
+ \frac{D_i^T}{\sqrt{10^{-8}+M^{-1}\sum_u\|D_u^T\|^2}},\qquad
+ {\cal L}=\frac1{2M}\sum_i\big\|x_i-\operatorname{stop}(x_i+V_i)\big\|^2 .
+\]
+The weights are local to one bank. The RMS at a given temperature uses the whole batch. Differentiating the live query at the point where the stopped target was built gives
+\[
+ \nabla_\theta{\cal L}=-M^{-1}\sum_i(\partial_\theta x_i)^\top V_i .
+\]
+Consequently an affinity can guide generation without its own gradient appearing in this expression.
+
+\begin{suppprop}[Equilibrium under exchange of the reference banks]\label{prop:bank}
+Conditional on the parameters, query seeds and conditioning information, the positive and negative banks have equal size. If their joint law is invariant under a simultaneous exchange of their roles in every block, then \(V_i\) and the stopped parameter gradient both have conditional expectation zero, provided the query Jacobians exist and have finite norm.
+\end{suppprop}
+
+\emph{Proof.} Swapping the banks permutes columns of \(A\), interchanges their masses and changes \(D_i^T\) to \(-D_i^T\). The shared RMS is even under the simultaneous swap. Thus the paired realizations have opposite field at every query, and \(\|V_i\|\leq\sqrt M\) ensures integrability. The conditional expectation vanishes. The fixed queries have fixed Jacobians, giving the gradient conclusion. \(\square\)
+
+Independent banks sampled from the same conditional descriptor law satisfy the hypothesis if they are also independent of the fixed queries. The coverage schedule used for training fixes one data reference at the anchor, draws another at the same formula and generates two reference geometries. Conditioning on the identity of that first positive can break the hypothesis. For example, when both queries are zero and both marginal laws are uniform on \(\{-1,1\}\), every affinity weight is equal. Conditioning on a first positive of \(+1\) leaves three independent random signs. Positive and negative counts of \(+1\) differ with positive sign in four of the eight assignments and with negative sign in one. After RMS normalization the mean direction is \(0.3750\) to four decimal places. Fixing the first positive to \(-1\) reverses it. Equal unconditional marginal laws can therefore coexist with a conditional bias. The proposition gives a sufficient criterion for an expected zero gradient.
+
+The archived bank diagnostics show that the appended channels respond to real data. In the first traversal there were 2,085 pairs of positive references with different material IDs. At a raw-vector threshold of \(10^{-8}\), all 2,085 angular vectors differed. The contact and reciprocal blocks differed in 2,030 and 2,071 pairs, respectively. At the same frozen small angular checkpoint, the first 128 anchors gave mean effective negative counts of \(1.80,1.79,1.79\) for angular, contact and reciprocal features. The corresponding median fractional-coordinate gradient norms were \(2.20,2.13,2.26\) after undoing the loss mean over queries. A nonzero response measures sensitivity of the feature map; how often the resulting training improves a crystal prediction is an empirical question.
+
+\subsection{Two different crystals with the same descriptor}\label{app:collision}
+The first example consists of four identical sites on the long axis of an orthogonal \(50\times5\times5\,\text{\AA}^3\) cell. Their occupied fractional twelfths are either
+\[
+ A=\{0,1,4,6\}\quad\text{or}\quad B=\{0,1,3,7\}.
+\]
+Their circular gap multisets are \(\{1,2,3,6\}\) and \(\{1,2,4,5\}\), respectively. The shortest lattice vectors span the transverse plane, so any isometry relating the motifs would preserve or reverse the long axis, and hence its gap multiset. The motifs are inequivalent. Yet each undirected circular separation \(1,\ldots,6\) occurs exactly once in both. The ordered difference counts, including self pairs, are four at residue zero, two at six and one elsewhere. Since a Fourier power is the Fourier transform of these counts, all their reciprocal powers agree \cite{zrelation,homometry}. The shortest distinct-site separation exceeds \(4\,\text{\AA}\), as does the shortest nonzero lattice translation. Every local channel is therefore the same on the two motifs with singleton orbits. Point masses on these two different crystals induce identical laws for all our descriptors. Changing the scalar affinity leaves this ambiguity intact. More generally the use of \({\rm O}(3)\) identifies mirror images, which matters if the desired target distinguishes enantiomers under proper rotations \cite{degenerate}.
+
+A related eight-site example explains why two studies of the same motifs can give different results. Place oxygen at the axial positions of \(A\) or \(B\), and place one silicon atom at the fractional offset \((0,1/3,0)\) from each oxygen. The silicon amplitude is the oxygen amplitude times a known common phase. In the original fixed-basis descriptor every mixed triple uses \(e_i,e_j,e_i+e_j\) with \(i\ne j\). At most one of the first two terms varies with the axial motif. Its variation pairs with its complex conjugate in the third term, so the motif enters only through its power. The same argument applies to the cross powers relative to the first species and whole-motif anchors in the multielement descriptor. The original 70-component and 1,306-component vectors both coincide. The species-preserving isometries of the cubic lattice cannot reconcile the different gaps of the oxygen rows.
+
+A collinear triple retains the phase information missing from those powers. At a common axial basis vector \(e_1\), evaluating the twelfth roots of unity gives
+\[
+ s_{\rm O}(e_1)^2\overline{s_{\rm Si}(2e_1)}
+ =(-\sqrt3+\mathrm{i})/32\quad\text{for }A,\qquad
+ (\sqrt3+\mathrm{i})/32\quad\text{for }B.
+\]
+The difference of the scaled real components is \(1/(16\sqrt2)\). This axial frequency must be transported with a change of basis. In an unscaled unit cubic cell the modern reciprocal sphere is empty, whereas its local orders \(0,1,2\) separate these two structures by raw norms \(0.00246,0.01381,0.00647\). Increasing the axial period to \(a\ge48\,\text{\AA}\) at transverse periods \(5\,\text{\AA}\) puts every distinct oxygen--silicon column at least \(4\,\text{\AA}\) from the next. The four isolated columns have identical local geometry in both motifs. With singleton \(P1\) orbits their orbit variance vanishes, their contact and local angular features agree, and their reciprocal intensities agree by the same power argument. The largest observed raw-block difference in this range was below \(8\times10^{-17}\). The scope of a collision therefore depends on both the feature order and the physical cutoff.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{fourier-cutoff.pdf}
+\caption{Two periodic motifs with identical pair differences. The oxygen rows in A have different sequences of gaps; the silicon rows repeat them at a common transverse offset. B shows the real part of the normalized collinear triple that distinguishes them. C varies the long-axis lattice period while keeping fractional coordinates fixed. At \(a=48\,\text{\AA}\) the nearest distinct columns reach the \(4\,\text{\AA}\) neighbor cutoff, and the local descriptors lose the distinction. The reciprocal cross intensities agree at every period.}
+\label{fig:fourier-cutoff}
+\end{figure}
+
+\subsection{Proof of Theorem~\ref{thm:decoder}}\label{app:decoder-proof}
+In the occupied-orbit decoder, let \(du_aJ_i\) be the fractional change at site \(i\) under a parameter increment \(du_a\). Set \(D_i=J_iL\). A weighted sum \(v_i\) of physical image vectors with scalar coefficients transforms as \(v'_i=v_iQ\) under the corresponding reindexing. The least-squares increment for an orbit has the form
+\[
+ H_a=\sum_{i\in a}D_iD_i^\top,\qquad
+ du_a=\left(\sum_{i\in a} v_iD_i^\top\right)H_a^+ .
+\]
+Transport of the chart gives \(J'_{\pi(i)}=J_iU^{-1}\), hence \(D'_{\pi(i)}=D_iQ\). Both the normal matrix \(H_a\) and the numerator are unchanged. The fitted physical displacements are the orthogonal projection onto the space of attainable orbit motions, which also makes them independent of any invertible reparameterization of the free coordinates. This characterization holds even at deficient rank in exact arithmetic. The numerical rank tests used here have explicit tolerances. If the cutoff-weighted input vectors have norm below \(R\), contraction by the stacked orthogonal projection gives \(\sum_{i\in a}\|du_aD_i\|^2<m_aR^2\). This is a bound in the seed lattice.
+
+The learned symmetric strain \(B\) is an average of \(d^\top d/R^2\) with bounded scalar coefficients and per-center weights summing to less than one, giving \(\|B\|_{\rm op}<1\). Thus \(C=I+0.3B\) has eigenvalues in \((0.7,1.3)\). Dividing \(C\) by \(\det(C)^{1/3}\) preserves volume, and the final factor \(\exp(\delta/3)\) gives log-volume change \(\delta\). Under Eq.~\eqref{eq:drift-group}, \(C'=Q^\top C Q\), so \(L'_{\rm out}=UL_{\rm out}Q\). The common orbit increment carries every equivalent site with it. Requested seed operations persist when the initial cell, partition and charts are compatible. A special parameter value may introduce additional symmetry or coincident sites. Pathwise equivariance of the map implies the corresponding pushforward identity for a transported seed law. Independence of a fresh prior draw from the choice of canonical setting would require a statement about the prior itself.
+
+\subsection{Training objectives for the comparator models}
+\paragraph{MeanFlow on the orbit backbone.}
+The same-backbone comparison uses the same seeds but a different training signal \cite{meanflow}. In the canonical chart a minimum-cost, species-compatible assignment produces observed-minus-seed chords, using wrapped fractions and the seed metric for costs. Projecting their Cartesian displacements onto the occupied-orbit tangent spaces gives the fractional offset \(\Delta_F\). The seed-group average of the observed metric, rescaled to observed volume, defines \(H_\star\). The corresponding cell offset is
+\[
+ \Delta_L=L\left[(L^{-1}H_\star L^{-\top})^{1/2}-I\right],
+\]
+where eigenvalues are floored at \(10^{-10}\). Interpolation of the positive-definite square root with the identity keeps the cell nonsingular. With \(\Delta=(\Delta_L,\Delta_F)\), the paired path \(X_t=X_1+(1-t)\Delta\) has derivative \(-\Delta\). Holding the lower time \(r\) fixed and differentiating \((t-r)u=X_r-X_t\) gives the stopped regression target \(\Delta-(t-r)(\partial_tu+J_Xu\,\dot X_t)\). The loss is one half of the sum of the mean squared cell error in units of \(4\,\text{\AA}\) and the per-structure mean squared Cartesian site error in the same units, averaged over occupied sites and dimensions. The later time \(t\) is the larger of two uniform draws. With probability \(0.30\) the earlier time is set to \(t\); otherwise it is the smaller draw. Generation uses \(r=0,t=1\). Its single forward call is separate from the directional derivative used in training.
+
+\paragraph{The Cartesian Gaussian prior.}
+The native uFlowCSP sampler \cite{uflow} draws 12 independent Gaussian channels at each of 100 padded tokens. Within a channel the centering operation subtracts the mean over all 100 tokens. For \(n\) occupied tokens, the decoded prior cell entry is the difference between their mean and the full-token mean. Its variance is \(1/n+1/100-2/100=\sigma_n^2=1/n-1/100\). The nine cell channels are independent, so \(L=\sigma_n A\) in law for a matrix \(A\) of independent standard normals. Gram--Schmidt orthogonalization gives \(|\det A|\) as the product of independent \(\chi_3,\chi_2,\chi_1\) lengths. Their first and second moments give
+\[
+ {\mathbb E}(|\det L|\mid n)=2\sqrt{2/\pi}\,\sigma_n^3,\qquad
+ {\rm Var}(|\det L|\mid n)=(6-8/\pi)\sigma_n^6 .
+\]
+For 12 sites the predicted mean is \(0.03169\,\text{\AA}^3\), and the sample mean was \(0.03158\,\text{\AA}^3\). Across 180,920 official prior draws, 141,900 had volume strictly between zero and \(0.1\,\text{\AA}^3\). The scale-enabled and native-volume analyses retained these structures.
+
+\paragraph{The native average-velocity control.}
+The Cartesian transport uses occupied positions and repeated cell entries \(x\), a Gaussian endpoint \(e\), the interpolant \(z=x+t(e-x)\), and the velocity \(v=e-x\). One quarter of each batch (rounded down) has \(r=t\). With probability \(0.8\) the crystal-system context is null and \(v_*=v\); for the other samples \(v_*=1.5v-0.5u_{\rm EMA}(z,t,t,\varnothing)\). For fixed \(r\) and sampled context the directional derivative is \(D u=J_z u\,v_*+\partial_tu\). For each structure \(b\) the native squared residual \(d_b\) averages \((u-\operatorname{stop}[v_*-(t-r)D u])^2\) over its occupied tokens and twelve channels. The loss averages \(d_b\operatorname{stop}[(d_b+10^{-3})^{-1}]\) over the batch. Generation with null context returns \(z-u(z,1,0)\). An affine test on twelve masked examples reproduced the native loss and the stopped parameter gradient.
+
+Sorting the input formula by electronegativity and atomic number makes a reordered listing of the same composition give identical tokens at fixed ordered noise. A position code on valid tokens can still distinguish positions occupied by the same element. In two fixed tests, reordering the formula gave exactly equal decoded outputs for the two eight-traversal Cartesian checkpoints. Exchanging equal-species noise vectors changed the predicted velocities by up to \(0.787\) and \(0.984\) in native units for the small and medium networks. A simultaneous Cartesian quarter turn gave discrepancies of \(4.700\) and \(4.629\). These are tests of pathwise commutation at fixed noise, a stronger requirement than a distributional symmetry.

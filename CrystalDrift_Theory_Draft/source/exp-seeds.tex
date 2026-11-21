@@ -1,0 +1,27 @@
+\subsection{Training-seed variation and matcher sensitivity}
+\begin{table}[!htbp]\centering\small
+\caption{Validation-selected models on all 9,046 official targets. The three rate and RMS columns reuse the first one, five and twenty draws of the same ordered stream. The last two columns give twenty-draw recovery under the maximum-site predicate and under a native-volume filter, respectively. The volume filter requires an accepted RMS match and $|\log(V_{\rm gen}/V_{\rm ref})|\leq\log(1.10)$. All recovery columns are percentages.}\label{t:exp-perseed}
+\begin{tabular}{llrrrrrrrr}\hline &&\multicolumn{3}{c}{MR (\%)}&\multicolumn{3}{c}{Normalized RMS} &\multicolumn{2}{c}{MR@20 (\%)}\\
+Method & Seed & 1 & 5 & 20 & 1 & 5 & 20 & Max. site & Volume\\\hline
+CrytalDrift & 11 & 6.98 & 20.89 & 33.47 & 0.379 & 0.370 & 0.344 & 18.97 & 20.55 \\
+ & 23 & 6.52 & 19.89 & 32.63 & 0.385 & 0.372 & 0.347 & 18.49 & 20.47 \\
+ & 37 & 6.88 & 20.21 & 32.62 & 0.381 & 0.370 & 0.348 & 18.00 & 19.31 \\
+IID-positive drift & 11 & 7.03 & 21.17 & 33.64 & 0.385 & 0.371 & 0.345 & 18.99 & 20.80 \\
+ & 23 & 6.54 & 20.29 & 32.69 & 0.385 & 0.373 & 0.347 & 18.39 & 20.47 \\
+ & 37 & 6.96 & 20.32 & 32.61 & 0.380 & 0.369 & 0.347 & 18.13 & 19.35 \\
+Compact MeanFlow & 11 & 8.57 & 21.41 & 31.54 & 0.389 & 0.366 & 0.340 & 18.46 & 26.38 \\
+ & 23 & 8.53 & 21.24 & 32.28 & 0.385 & 0.358 & 0.337 & 19.18 & 26.02 \\
+ & 37 & 9.18 & 21.59 & 31.76 & 0.390 & 0.363 & 0.341 & 18.37 & 26.31 \\
+Flow, 1 Euler step & 11 & 7.51 & 18.13 & 25.53 & 0.404 & 0.389 & 0.360 & 14.75 & 21.71 \\
+ & 23 & 7.53 & 17.79 & 24.54 & 0.398 & 0.386 & 0.358 & 14.48 & 21.41 \\
+ & 37 & 7.44 & 18.07 & 25.06 & 0.408 & 0.392 & 0.358 & 14.90 & 21.64 \\
+Flow, 16 Euler steps & 11 & 10.50 & 23.66 & 36.50 & 0.364 & 0.334 & 0.318 & 21.09 & 30.48 \\
+ & 23 & 10.92 & 23.59 & 36.45 & 0.364 & 0.335 & 0.320 & 21.24 & 29.26 \\
+ & 37 & 10.46 & 23.89 & 36.67 & 0.361 & 0.334 & 0.319 & 21.35 & 30.63 \\
+Retrieval & 11 & 61.80 & 64.69 & 65.18 & 0.039 & 0.041 & 0.042 & 62.30 & 55.33 \\
+ & 23 & 61.81 & 64.47 & 65.20 & 0.041 & 0.041 & 0.042 & 62.33 & 55.34 \\
+ & 37 & 61.97 & 64.64 & 65.18 & 0.040 & 0.041 & 0.042 & 62.28 & 55.32 \\
+Released uFlowCSP & release & 46.32 & 68.05 & 79.32 & 0.089 & 0.088 & 0.085 & 67.78 & 78.07 \\
+CrystalFlow, 5 steps & release & 58.14 & 77.45 & 85.87 & 0.232 & 0.186 & 0.156 & 69.02 & 75.90 \\
+\hline\end{tabular}\end{table}
+Repeating the original one-pass drifting fits with one CPU thread changed the accepted status of one candidate among 542,760 relative to the archived two-thread fits. For seed 23, draw four for \texttt{mp-1069147} was accepted in the refit. Its target gained a five-draw match and was recovered by twenty draws in both runs. One- and twenty-draw recovery indicators agreed across all targets and seeds.

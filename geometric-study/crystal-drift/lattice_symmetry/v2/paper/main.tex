@@ -1,0 +1,82 @@
+\documentclass[10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,graphicx}
+\ifdefined\pdfstartlink
+  \newcommand{\linkto}[2]{\leavevmode\pdfstartlink attr {/Border [0 0 0]} user {/Subtype /Link /A << /S /URI /URI (\pdfescapestring{\detokenize{#1}}) >>}#2\pdfendlink}
+  \newcommand{\marksection}[2]{\pdfdest name {#1} xyz\pdfoutline goto name {#1} {#2}}
+  \pdfinfo{/Title (CrytalDrift: One-step generation in the geometry of periodic crystals) /Author (AmirM.MohammadHosseini) /Subject (Invariant training fields, periodic geometry and Wyckoff-conditioned crystal generation)}
+\else
+  \usepackage[hidelinks]{hyperref}
+  \hypersetup{pdftitle={CrytalDrift: One-step generation in the geometry of periodic crystals},pdfauthor={AmirM.MohammadHosseini}}
+  \newcommand{\linkto}[2]{\href{#1}{#2}}\newcommand{\marksection}[2]{\pdfbookmark[1]{#2}{#1}}
+\fi
+\setlength{\textwidth}{6.43in}
+\setlength{\oddsidemargin}{0.035in}
+\setlength{\textheight}{9.12in}
+\setlength{\topmargin}{-.53in}
+\setlength{\parindent}{1.05em}
+\setlength{\emergencystretch}{1.5em}
+\setlength{\textfloatsep}{11pt plus 2pt minus 2pt}
+\renewcommand{\topfraction}{.92}
+\renewcommand{\bottomfraction}{.8}
+\renewcommand{\textfraction}{.08}
+\renewcommand{\floatpagefraction}{.76}
+\setcounter{topnumber}{3}\setcounter{totalnumber}{4}
+\AddToHook{env/figure/before}{\par}
+\AddToHook{env/figure/after}{\par}
+\AddToHook{env/table/before}{\par}
+\AddToHook{env/table/after}{\par}
+\title{\vspace{-1.6em}\bfseries CrytalDrift\\[2pt]\large One-step generation in the geometry of periodic crystals}
+\author{AmirM.MohammadHosseini\\\small Department of Biotechnology, University of Tehran}
+\date{}
+\begin{document}
+\maketitle
+\vspace{-1.4em}
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+\section{Learning from different descriptions of the same crystal}
+A cubic cell can be redrawn as a skew parallelepiped, changing both its lattice coordinates and every fractional site. A training objective that compares these arrays directly can exert a force between two descriptions of the same material. With a bank of training and generated samples, each member can have its own choice of basis, origin and frame. Equivariance of a network acting on a single input leaves this comparison problem open.
+
+\begin{figure}[!htbp]\centering
+\includegraphics[width=\linewidth]{csp-interleaved.pdf}
+\caption{What one call buys at fixed sample count and fixed elapsed time. Each method receives the same 128 MP-20 cell compositions and a stream capped at 20 completed proposals per target. For each target we vary the order in which methods run. The physical networks share seed draws. The right panel counts only proposals already returned to host memory by the deadline. Matching happens afterward. Shading gives a pointwise 95\% target-bootstrap interval for the angular model.}
+\label{fig:v2balanced}\end{figure}
+
+We adapt the training-time attraction and repulsion of Deng et al.\ to periodic atomic environments \cite{deng}. In CrytalDrift, a scalar affinity determines how much each reference contributes. Differences of physical features determine the direction of the update. A separate graph network takes one seed and proposes a cell and all of its sites in one call. When an occupied Wyckoff template is supplied, a crystallographic construction first draws a compatible seed. These three operations answer different questions: which crystals are similar, how a proposal moves, and which symmetry operations it must retain. Figure~\ref{fig:method} follows them from inputs to outputs.
+\begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{method.pdf}
+\caption{The formula-only experiment (A) supplies the elements and their cell multiplicities. The template experiment (C) also supplies a group in a specified setting and its species-labelled occupied orbits. The upper path returns a lattice and fractional coordinates after one neural evaluation. The two banks and the feature-space drift below enter training only.}
+\label{fig:method}\end{figure}
+
+For molecules, SymDrift compares aligned coordinates or embeds each structure in its sorted lists of element-pair distances \cite{symdrift}. Our invariant comparison must also account for the translation lattice, its nonzero self-images and the incidence of several neighbors at one center. Local power spectra and whole-structure pooling have a long history in atomistic modeling \cite{soap,whole,degenerate}. LEGO-xtal uses analogous harmonic contractions during pre-relaxation toward specified local environments \cite{lego}. Here the contractions weight and direct a distributional training update on jointly proposed cells and sites. Kernel-gradient drifting obtains directions by differentiating a kernel and has identification results under its own assumptions \cite{kernelgrad}. TokenDrift refines text generation in an embedding and Drift-React generates endpoint-conditioned molecular paths \cite{tokendrift,driftreact}.
+
+\marksection{theory}{Periodic training field and geometric tests}
+\input{theory}
+The vector and dyadic updates draw on equivariant graph and periodic deformation models \cite{egnn,gems,vector}. CrystalFlow, FlowMM and DiffCSP model continuous periodic geometry with integration or denoising \cite{crystalflow,flowmm,diffcsp}. One-step generation itself has clear precedents in uFlowCSP and OMatG-flash \cite{uflow,omatg}. The argument above concerns independent representations inside an empirical field as well as the forward map of the generator. We test its practical value against a fixed-basis release, held-out structures, and clocks that include construction of the neighbor graph.
+\input{tests}
+\marksection{csp}{Prediction from composition}
+\input{conditioned}
+\paragraph{Published operating points.}
+Dey et al.\ report 78.38\% recovery and mean normalized RMS 0.0783 for one-step uFlowCSP with 20 proposals per MP-20 target. Five steps at the same draw count reached 83.64\% and 0.0619. Their 10,000-proposal clocks on an A100 were 0.39 and 1.31 minutes \cite{uflow}. Their comparison lists 77.93\% for 1,000-step DiffCSP and 78.34\% for 100-step CrystalFlow at 20 draws \cite{diffcsp,crystalflow}. In the fixed-basis release we separately ran the official CrystalFlow composition checkpoint at five unannealed Euler steps and recovered 7,768 of the 9,046 targets at 20 draws (85.87\%). Those saved proposals belong to the released CrystalFlow checkpoint. All timing comparisons for the new physical networks use our local measurements.
+\marksection{dng}{Generation across multielement compositions}
+\input{denovo}
+\input{chemistry}
+\input{denovo-clock}
+\marksection{symmetry}{Prediction from occupied Wyckoff sites}
+\input{wyckoff}
+\section{Discussion}
+\input{discussion}
+\paragraph{Data, code and authorship.}
+The accompanying research package contains the checkpoint and split identifiers, ordered draws, evaluator settings, editable figures and run commands. The earlier 38-page release remains the fixed-basis benchmark. The official MP-20 test structures were inspected in that work. The present model choices use training and validation. OpenAI Codex assisted with literature verification, software, experiments, analysis and drafting.
+\input{bibliography}
+\clearpage
+\appendix
+\section*{Mathematical and experimental supplement}
+\addcontentsline{toc}{section}{Mathematical and experimental supplement}
+\marksection{supp}{Mathematical and experimental supplement}
+\input{supplement}
+\input{wyckoff-supplement}
+\input{earlier}
+\input{sensitivity}
+\end{document}

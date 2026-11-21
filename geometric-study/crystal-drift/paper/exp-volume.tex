@@ -1,0 +1,10 @@
+\subsection{Correcting the native volume}
+We fit a ridge regression to log volume per atom using elemental fractions and an unpenalized intercept on the 27,136 MP-20 training structures. We add the mean training residual at an observed reduced formula, shrunk by $n/(n+3)$ for $n$ training occurrences. For an unseen formula the residual is zero. The correction adds $(\log V_{\rm pred}-\log V_{\rm draw})I/3$ to the log-stretch tensor. This preserves the volume-normalized shape and every fractional position. We reconstructed all 542,760 cells from the three original fits and ran both matchers again.
+\begin{table}[!htbp]\centering\small
+\caption{Volume correction on 9,046 official MP-20 targets. Each pair gives original and corrected recovery in percent. Intervals resample target IDs, paired across arms and seeds, and refer to the difference in native-volume-qualified recovery, in percentage points.}\label{t:correct-volume}
+\begin{tabular}{rrrrr}\hline $k$ & Standard MR & Maximum-site MR & MR with native volume & Difference [95\% interval]\\\hline
+1 & 6.79 / 6.79 & 2.76 / 2.76 & 1.73 / 5.46 & +3.73 [3.45,4.02]\\
+5 & 20.33 / 20.33 & 9.49 / 9.49 & 7.58 / 16.31 & +8.73 [8.24,9.23]\\
+20 & 32.91 / 32.91 & 18.49 / 18.49 & 20.11 / 26.03 & +5.92 [5.35,6.49]\\
+\hline\end{tabular}\end{table}
+Mean absolute log-volume error per draw changed from 0.189 to 0.070. The number of individual acceptance decisions changed by the rematch was 1. Finite absolute tolerances during primitive reduction can affect even a scale-normalized comparison.

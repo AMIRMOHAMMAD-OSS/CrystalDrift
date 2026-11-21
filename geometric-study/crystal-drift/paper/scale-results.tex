@@ -1,0 +1,13 @@
+\section{Transfer to WBM and Alexandria with the original one-pass models}
+To test transfer beyond the fitted MP-20 distribution, we retained the original one-pass multielement models and evaluated training-template retrieval against the same targets. In these cohorts donor retrieval compares the sorted atomic numbers of occupied sites, counting multiplicities. The WBM fits use their own training partition. The six mixed triple products in our binary ablation do not enter the full-chemistry fingerprint (Supplement~\ref{s:scaled}).
+
+The official MP-20 split contains 27,136 training structures, including 21,386 with at least three elements, and 9,046 test structures. The Wang--Botti--Marques (WBM) source contains 256,963 DFT-relaxed structures \cite{wbmdata}. A cap of twenty occupied sites in the native cell retained 256,259. Grouping by reduced formula gave 205,091 training, 25,117 validation and 26,051 test records. No reduced formula occurs in two WBM partitions, although different formulas can share structural prototypes. The three fits on each dataset used one shuffled pass over every training anchor.
+
+\input{revision-scale}
+
+\paragraph{Transfer across sources.}
+On the 128 hash-selected WBM targets, frozen MP-20 CrytalDrift, one-Euler flow, 16-step flow and MP-20 template retrieval recovered 26.30\%, 21.09\%, 26.30\% and 54.69\%, respectively, in five draws. Eighteen target formulas also occurred in MP-20 training. The released MP-20 uFlowCSP network recovered 94/128 on this WBM cohort. The datasets have distinct ID namespaces, which prevents a direct cross-source structural leakage check by ID alone.
+
+For a test with unseen chemistry, we used MatterGen's Alex-MP-20 release \cite{mattergen}, which contains 607,683 training and 67,521 validation records. From 60,672 eligible validation rows with Alexandria identifiers and reduced formulas absent from MP-20 training, we selected 128 by ID hash. The same four frozen MP-20 methods, in the same order, recovered 14.84\%, 9.64\%, 13.54\% and 28.13\% in five draws. Drifting exceeded one-Euler flow by 5.21 percentage points ($[1.56,8.85]$). Its difference from 16-step flow was $+1.30$ points ($[-1.30,3.91]$). All fits used MP-20 or WBM. The Alexandria result measures validation-set transfer.
+
+

@@ -1,0 +1,16 @@
+\begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{exp-gpu-curves.pdf}
+\caption{Raw recovery on 128 hash-selected full-chemistry MP-20 targets. Both panels use the same generated structures. Left, each target receives its own first $k$ candidates. Right, it receives the candidates completed before each measured batch-one deadline. Each episode ends at twenty candidates. All matches are scored retrospectively.}\label{fig:exp-gpu}\end{figure}
+We measured serial and 10,000-request workloads on the same GeForce RTX 3060 Laptop GPU using FP32, with TF32 disabled and one host compute thread. Compact models use their validation-selected seed-11 checkpoints. Calls start from host species arrays and end with species, a canonical lattice and fractional and Cartesian coordinates on the host. Retrieval runs on the host. We precomputed eligible retrieval donors and the released uFlowCSP species tokens for these 128 inputs. Five untimed calls precede each measured batch size. The throughput workload cycles the same 128 compositions at batch 24 with a final batch of sixteen. Setup, retrospective matching and relaxation fall outside the timer.
+\begin{table}[!htbp]\centering\small\caption{Measured generation costs on the 128-target full-chemistry cohort. NFE counts neural evaluations per structure. Batch-one values are medians over 2,560 serial completions. Throughput uses a complete timed 10,000-request workload for each model.}\label{t:exp-gpu}
+\begin{tabular}{lrrrr}\hline Method & NFE & Median B1 (ms) & min/10,000 & Structures/s\\\hline
+CrytalDrift & 1 & 15.014 & 0.119 & 1400.6 \\
+IID-positive drift & 1 & 15.052 & 0.088 & 1904.0 \\
+Compact MeanFlow & 1 & 13.704 & 0.102 & 1630.6 \\
+Flow, 1 Euler step & 1 & 12.677 & 0.059 & 2831.3 \\
+Flow, 16 Euler steps & 16 & 112.874 & 0.888 & 187.6 \\
+Retrieval & 0 & 0.218 & 0.015 & 10881.9 \\
+Released uFlowCSP & 1 & 80.084 & 1.059 & 157.4 \\
+CrystalFlow, 5 steps & 5 & 143.080 & 0.884 & 188.6 \\
+\hline\end{tabular}\end{table}
+The GPU was reserved for each timed method. Concurrent CPU-only experiments shared the host, and the batch-one and 10,000-request results describe this machine and launch configuration.
+At a 100~ms deadline, CrytalDrift averaged 6.72 completed draws per target and recovered 21.1\%, compared with 0.42 draws and 4.7\% for the 16-step flow. Their paired difference was +16.4 percentage points (95\% target-bootstrap interval $[10.2,23.4]$). Released uFlowCSP recovered 32.0\% and retrieval recovered 68.8\% within the same deadline.

@@ -1,0 +1,58 @@
+\documentclass[10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,graphicx}
+\setlength{\textwidth}{6.43in}
+\setlength{\oddsidemargin}{.035in}
+\setlength{\textheight}{9.12in}
+\setlength{\topmargin}{-.53in}
+\newcommand{\linkto}[2]{\leavevmode\pdfstartlink attr {/Border [0 0 0]} user {/Subtype /Link /A << /S /URI /URI (\pdfescapestring{\detokenize{#1}}) >>}#2\pdfendlink}
+\pdfinfo{/Title (CrytalDrift: One-call crystal structure prediction from a symbolic Wyckoff seed) /Author (AmirM.MohammadHosseini)}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\topfraction}{.92}\renewcommand{\textfraction}{.06}
+\title{\bfseries CrytalDrift\\[2pt]\large One-call crystal structure prediction from a symbolic Wyckoff seed}
+\author{AmirM.MohammadHosseini\\\small Department of Biotechnology, University of Tehran}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+\section{Prediction from the unit-cell composition}
+\input{lead-figure}
+Can one evaluation of a geometric network recover a crystal from its formula? Given the elements and their integer multiplicities in the unit cell, the predictor must choose a lattice, a symmetry and a packing. A training prototype can resolve much of that ambiguity before the network is called. This makes the relevant experiment a paired one. For each target we draw the same starting crystals twice, once returning the seeds and once applying a learned map. Recovery of an additional target measures what this update contributed. A proposal that destroys the only match counts against it.
+
+CrytalDrift adapts the attraction--repulsion objective of Deng et al.\ to periodic structures \cite{deng}. SymDrift identified the difficulty of independently oriented training references and proposed invariant molecular embeddings and aligned-coordinate fields \cite{symdrift}. TokenDrift applies a drifting objective to the distributions of tokens under a discrete diffusion model. Drift-React uses endpoint information to generate molecular reaction paths \cite{tokendrift,driftreact}. Periodic CSP adds the translation lattice itself to the unknowns. An equivalent change of basis changes the arrays of every fractional site and can change the set of integer images returned by an incomplete neighbor search.
+
+DiffCSP, FlowMM and CrystalFlow generate sites and lattice through denoising or flow integration \cite{diffcsp,flowmm,crystalflow}. A one-step CSP comparator already exists in uFlowCSP, which predicts a mean velocity with a chemistry-conditioned transformer \cite{uflow,meanflow}. DiffCSP++ constrains occupied Wyckoff positions and the space-group-compatible lattice. Wyckoff Transformer learns distributions over discrete occupations \cite{diffcspplus,wyformer}. Our comparison concerns a periodic training field, continuous updates within \emph{inferred} occupied orbits, and what those updates contribute once their initial geometry is held fixed.
+\begin{figure}[htbp]\centering\includegraphics[width=\linewidth]{workflow.pdf}
+\caption{Construction of a formula-only proposal. A train-only shortlist supplies the occupied pattern. The sampler draws a training-calibrated cell and fresh free coordinates. Observed and generated reference banks enter only the optimization loss. The zero-call control returns exactly the native lattice and sites entering the refiner.}\label{fig:workflow}\end{figure}
+\section{The seed, the generator and the field}
+Write $L$ for the row lattice in \AA{} and $f_i$ for the fractional row of species $z_i$. A unimodular row change $U$ and a Cartesian frame change $Q$ take $L$ to $ULQ$ and $f_i$ to $f_iU^{-1}$ up to a common origin and integer wraps. A distance between raw lattice entries changes even if only a positive reference is sheared. The affinity determining its attraction would then depend on its stored representative.
+
+We start from a training catalog of conventional occupied orbits with verified maps to primitive cells. Formula inference compares stoichiometrically compatible training entries, assigning elements to equal-count roles using Mendeleev order. It returns distinct group and occupation patterns in order of chemical proximity. The sampler draws a group-compatible cell shape, a composition-adjusted volume and fresh continuous parameters for each occupied orbit. A metrically projected cell and affine symmetry expansion realize the requested counts. For held-out targets, the reference group, coordinates and volume enter only retrospective evaluation. A separate experiment remaps a training donor's continuous geometry as well. A general $P1$ template supplies the fallback for an unsupported formula.
+
+The network embeds each site and aggregates messages over every physical neighbor image inside 4~\AA, including nonzero images of the center. Equivalent sites pool into occupied-orbit tokens. Global pooling communicates between those tokens. Scalar edge coefficients weight physical vectors and dyadics. A least-squares projection converts site vectors to shared displacements of each orbit's free parameters. The decoder jointly returns sites, a volume-preserving shape deformation and a positive scalar volume factor. It uses one neural forward call. Selecting a template by a separate learned ranking and then applying this refiner uses two learned stages. Their costs enter separately.
+
+Each training query is embedded together with its own species-resolved pair shells and center-wise powers of orders zero through two \cite{soap}. We compare two physical extensions. One summarizes periodic contacts between distinct occupied orbits of compatible chemical and multiplicity types. The other sums real cross-species structure-factor intensities over smooth shells of physical reciprocal length. For both, the affinity and its feature-space displacement use exactly the same standardized representation. The regression target combines a positive bank from the same exact formula and a negative bank of generated crystals. A stopped target gives the gradient $-\langle(\partial_\theta\Phi(G_\theta))^\top V\rangle$. These features and both banks disappear from inference. Appendix~\ref{app:periodic-field} gives the channel definitions, normalization axes, finite-bank statement, decoder proof and collision.
+
+\section{Protected training and controlled comparisons}
+For a symbolic pipeline, the first draw uses the first ranked feasible template, and subsequent draws walk that ordered shortlist. A short list cycles. Each visit samples fresh continuous parameters. For native uFlowCSP, successive draws sample fresh Gaussian tensors. Thus $k$ is a count of ordered proposals. The symbolic templates in an episode follow a prescribed sequence. We retain every attempted draw and its training donor so a failed geometry cannot silently change the denominator. A learned auxiliary ranker evaluates the whole shortlist once per target. Returning $k$ ranked seeds then costs one ranking call, and refining all of them costs one ranking call plus $k$ single-candidate network evaluations. Tensor batching combines several candidate evaluations into a single forward invocation for throughput.
+We use the published MP-20 partition assembled from the Materials Project for generative modeling \cite{materialsproject,cdvae}. The official test set of 9,046 targets previously informed this project. We also protected complete structural families from all new fits, descriptor calibration, cell memories and supervised template selection. Family identity uses the space-group type and an anonymous species partition of conventional orbit multiplicities and free dimensions at a tolerance of 0.01~\AA. It treats repeated-orbit permutations and exchanges of elemental names consistently. We sampled 24 families containing 228 structures, followed by 96 new chemistries from 96 other families still represented in the catalog. Every structure at the same reduced formula as a challenge material was removed. The resulting 26,614 eligible training IDs include 26,419 chart-verified native primitive structures for the orbit models. Earlier checkpoints have seen the official training partition, including these challenge records. They are eligible for the public comparison only.
+
+Each training traversal visits all eligible anchor IDs. Positive references share the anchor's exact composition. Both symbolic and metric donor searches for training seeds exclude the anchor's entire reduced formula. A distinct 96-material development panel selects checkpoints by five-draw recovery with ties to the earlier checkpoint. Another 96-material confirmation panel records the frozen choice. The primary endpoint is the paired five-draw recovery gain over identical symbolic seeds. We prespecified three percentage points as a practical gain, together with secondary checks at 20 draws, on cells with nine or more sites and under a native-volume constraint.
+
+For the reduced uFlowCSP comparison we use the authors' chemistry-aware transformer, training-only crystal-system input, canonical ordering and MeanFlow transport from their released implementation. We shrink width, attention heads and layer count and fit from scratch. A separate control trains a MeanFlow objective on CrytalDrift's orbit backbone and symbolic seeds. The native transformer starts from its Gaussian prior. Its one-step update and that of the orbit model therefore face different starting geometries. Further implementation and exposure details accompany the tables.
+\input{results}
+\input{discussion}
+\paragraph{Data and authorship.} Ordered predictions, split identities, validation choices, failed attempts, checkpoints and the code to regenerate figures and tables accompany the manuscript. OpenAI Codex assisted with software, experiments, verification and drafting.
+\input{bibliography}
+\clearpage\appendix
+\section*{Mathematical and experimental supplement}
+\input{supplement}
+\input{audit}
+\input{native-math}
+\input{occupancy-supplement}
+\input{conditioned-supplement}
+\input{validation-detail}
+\input{final-appendices}
+\end{document}

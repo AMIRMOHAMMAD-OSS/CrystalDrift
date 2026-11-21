@@ -1,0 +1,18 @@
+\subsection{Relaxation against a finite phase library}
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Paired CHGNet relaxation experiment on eight prospectively hash-selected draws per arm. Hull counts complete restricted-hull calculations, Conv. counts optimizer convergence, Energy counts passing the restricted energy screen and Joint counts all physical, novelty and uniqueness requirements. CPU seconds sum single-core candidate relaxation times. Competing phases are shared across arms.}\label{tab:hull}
+\begin{tabular}{lrrrrrr}\hline
+Raw pipeline & Draws & Hull & Conv. & Energy & Joint & CPU s\\\hline
+angular\,medium\,long & 8 & 8 & 6 & 4 & 0 & 25.6\\
+angular\,small & 8 & 8 & 6 & 4 & 0 & 67.7\\
+contacts\,medium\,long & 8 & 8 & 6 & 4 & 0 & 28.5\\
+contacts\,small & 8 & 8 & 6 & 4 & 0 & 35.5\\
+prior & 8 & 8 & 6 & 5 & 1 & 42.5\\
+released\,angular & 8 & 8 & 6 & 5 & 4 & 66.3\\
+released\,uflow & 8 & 8 & 6 & 5 & 1 & 63.5\\
+\hline\end{tabular}\end{table}
+
+We used 119 distinct retained competing phases across the eight selected compositions. Each candidate and phase received the same potential, cell relaxation, optimizer and force criterion. The joint endpoint additionally requires the covalent-contact screen, novelty against the original training catalog and within-panel uniqueness. A zero count out of eight permits an underlying yield as high as 31.2\% at a one-sided 95\% binomial limit. We treat these as restricted, model-potential outcomes. Experimental synthesizability and DFT stability require independent evidence.
+
+\input{crystal-gallery-extended}

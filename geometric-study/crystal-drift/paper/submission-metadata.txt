@@ -1,0 +1,23 @@
+Title
+CrytalDrift: One-step generation of periodic crystal structures
+
+Author
+AmirM.MohammadHosseini
+
+Affiliation
+Department of Biotechnology, University of Tehran
+
+Suggested primary category
+cond-mat.mtrl-sci
+
+Possible cross-list
+cs.LG
+
+Comments
+38 pages, 9 figures. The mathematical supplement and additional experimental results follow the references in the same PDF.
+
+Abstract
+Can a one-step crystal generator recover more structures by spending its inference budget on additional proposals? CrytalDrift adapts a training-time attraction-repulsion objective to generate a lattice and all fractional sites jointly in one network evaluation given the unit-cell composition. Its field acts on log lattice metrics and periodic Fourier products. On all 9,046 MP-20 test targets, twenty drifting proposals recovered 32.91% of structures, compared with 36.54% for compact 16-step flow. The ordering reversed at a measured 100 ms serial deadline on 128 full-chemistry targets. Drifting recovered 27 targets and 16-step flow recovered six. Dedicated compact MeanFlow recovered 33, released one-step uFlowCSP recovered 41, and training-template retrieval recovered 88. Generating 10,000 structures took 7.14 seconds for drifting and 53.29 seconds for compact 16-step flow. On 512 independent Alexandria targets, one retrieval draw and nineteen drifting proposals recovered 39.39%, against 24.41% for retrieval alone. For de novo generation we fit a separate multielement composition prior. Of 10,000 draws, 6,478 had a reduced formula absent from training. Across all 10,000 shared composition draws, drifting and 16-step flow each achieved about 91% structural validity, yet their coverage recalls were 49.83% and 67.62%. One of sixteen consecutive learned-prior drifting proposals passed relaxation, restricted-hull energy, uniqueness and novelty criteria. For independent banks of fixed size, we prove that the expected normalized drift tends to zero as the generated feature laws converge weakly to the reference laws and exhibit two inequivalent eight-site structures with identical trained fingerprints. These results identify time budgets at which one-call proposals help and geometric information the training representation loses.
+
+Source package
+crystal-drift-arxiv.zip, with main.tex as the top-level document.

@@ -1,0 +1,24 @@
+\begin{table}[htbp]
+\centering\small\setlength{\tabcolsep}{3.8pt}
+\caption{Raw recovery and CPU cost on the same 128 binary MP-20 targets. MR is the percentage of targets with a match. RMS is the mean lowest normalized RMS displacement among matched targets. Both are averaged over three local seeds or the single released checkpoint. $S$ and $kS$ are neural evaluations per draw and per target. The last three columns give median warm batch-one latency (ms), measured wall time for 10,000 structures (seconds), and the resulting throughput (structures per second) at batch 12.}
+\label{tab:revision-binary}\smallskip
+\begin{tabular}{@{}lrrrrrrrrrrr@{}}\hline
+ & \multicolumn{2}{c}{Evaluations} & \multicolumn{3}{c}{MR (\%)} & \multicolumn{3}{c}{Best RMS} & \multicolumn{3}{c}{CPU performance}\\
+Method & $S$ & $kS$ (1/5/20) & $k{=}1$ & $5$ & $20$ & $k{=}1$ & $5$ & $20$ & ms/draw & s/10k & struct./s\\\hline
+CrytalDrift & 1 & 1/5/20 & 13.3 & 43.8 & 74.7 & 0.348 & 0.351 & 0.335 & 0.616 & 2.89 & 3\,463 \\
+Flow, 1 step & 1 & 1/5/20 & 16.7 & 47.7 & 71.1 & 0.365 & 0.360 & 0.336 & 0.583 & 2.84 & 3\,521 \\
+Flow, 16 steps & 16 & 16/80/320 & 19.0 & 50.8 & 79.4 & 0.367 & 0.347 & 0.311 & 5.377 & 21.43 & 467 \\
+Retrieval & 0 & 0/0/0 & 48.4 & 57.6 & 57.8 & 0.011 & 0.013 & 0.012 & 0.070 & 0.188 & 53\,092 \\
+Released uFlowCSP & 1 & 1/5/20 & 53.1 & 80.5 & 89.8 & 0.088 & 0.054 & 0.062 & 256.6 & 1\,323.5 & 7.56 \\
+\hline\end{tabular}
+\end{table}
+
+Each method receives the same released cell composition (two species, two to eight active sites), with no space-group input. We retain the ordered raw proposals and all failures. The released 131-million-parameter uFlowCSP checkpoint trained on the wider MP-20 corpus \cite{uflow}. Its test partition contains all 128 target IDs. We preserve its original five draws and append 15 from an independent, fixed random stream. At 20 proposals uFlowCSP exceeds CrytalDrift by 15.1 percentage points (95\% paired target-bootstrap interval $[7.6,22.7]$). The one-Euler flow measures the effect of truncating the compact flow's integration.
+
+We timed the five methods on one Intel Core i7-12700H CPU using three pinned logical cores, three compute threads, FP32 neural inference and a warm service. Every call returns species, a canonical cell, fractional sites and Cartesian sites on the host. Retrieval caches eligible training donors by composition. Model loading, donor-index construction, retrospective matching, relaxation and ranking are outside the proposal timer. The 10,000-structure workload cycles through identical compositions in batches of 12 using local seed 11 or the released checkpoint. Other project jobs ran on separate CPU cores and shared system memory. For the serial curves we time individual completions up to 20 candidates per target and score those exact candidates afterwards. At 5\,ms the observed recovery rates, in table order, were 49.7, 52.9, 6.8, 57.8 and 0.0\%. The released checkpoint reached 75.0\% within one second and 89.1\% within five seconds.
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\linewidth]{revision-binary-accuracy-time.pdf}
+\caption{Binary structure recovery by proposal count and wall time. Panel (a) uses prefixes of the saved benchmark draws, including the extended uFlowCSP replay. Panel (b) uses fresh, independently timed serial draws on the same IDs and measures elapsed time from the start of each target. Each method stops after at most 20 proposals. The log time axis spans both compact predictors and the released checkpoint.}
+\label{fig:revision-binary-time}
+\end{figure}

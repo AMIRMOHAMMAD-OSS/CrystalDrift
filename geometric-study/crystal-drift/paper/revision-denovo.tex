@@ -1,0 +1,12 @@
+\begin{table}[!htbp]\centering\small
+\caption{De novo generation on the binary MP-20 domain. The reference distribution consists of all 1,229 held-out binary cells with two to eight sites. Every one of the 1,024 generated candidates was retained.}\label{tab:denovo}
+\begin{tabular}{lrl}\hline
+Measurement & Result & Population or unit\\\hline
+Structural validity & $1{,}003/1{,}024$ & Minimum distinct-site distance $\geq 0.5$\,\AA\\
+Compositional validity & $930/1{,}024$ & SMACT charge/Pauling or all-metal rule\\
+Both valid & $910/1{,}024$ & Same generated cell\\
+Coverage recall / precision & $9.44/42.38$ & Percent, all references / all draws\\
+Wasserstein-1, density & 0.444 & g\,cm$^{-3}$, jointly valid draws\\
+Wasserstein-1, number of elements & 0.000 & Two elements in every cell by design\\\hline
+\end{tabular}\end{table}
+We followed the DiffCSP generation evaluator for the structural and chemical predicates and its MP-20 fingerprint cutoffs \cite{diffcsp,smact,matminer}. Structural validity also requires a cell volume of at least $0.1$\,\AA$^3$. Coverage compares the 61-component mean CrystalNN site fingerprint and the standardized 132-component Magpie composition fingerprint. The distance cutoffs are 0.4 and 10, respectively. Each space uses its own nearest neighbor. All 2,253 fingerprints could be computed. For density we used all 910 jointly valid proposals against every reference, because the released evaluator's sample of 1,000 valid proposals exceeds the number available here. Including all 1,024 draws instead gives a density distance of 0.404\,g\,cm$^{-3}$. The low reference coverage persists despite high structural validity (Table~\ref{tab:denovo}).

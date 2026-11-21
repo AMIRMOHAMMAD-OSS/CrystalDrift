@@ -1,0 +1,11 @@
+\subsection{First-principles check at a shared composition}
+We selected the first learned-prior draw among the first sixteen with at most four sites and no atomic number greater than 36. This rule selected MgGa$_3$ (draw 7) before inspecting any DFT result. We evaluated the raw and CHGNet-relaxed cells from both compact geometry generators. Each single-point calculation used Quantum ESPRESSO, scalar-relativistic PBE PAW pseudopotentials from PSLibrary 1.0.0 for Mg and Ga, plane-wave and density cutoffs of 65 and 520\,Ry, cold smearing of 0.02\,Ry, unpolarized electrons and an electronic threshold of $10^{-8}$\,Ry \cite{qe,pslibrary}. We used unshifted $2^3$ and $3^3$ uniform meshes, performed no ionic update, and evaluated the forces on the supplied coordinates.
+\begin{table}[!htbp]\centering\small
+\caption{First-principles single points for MgGa$_3$. Each energy change is the CHGNet-relaxed minus raw total energy per atom at the same wavevector mesh. Maximum atomic forces are in eV/\AA.}\label{t:dft}
+\begin{tabular}{lrrrr}\hline Generator & Mesh & $\Delta E$ (eV/atom) & Raw force & Relaxed force\\\hline
+CrytalDrift & 2$^3$ & -7.1940 & 104.487 & 0.775\\
+CrytalDrift & 3$^3$ & -7.3135 & 104.488 & 0.729\\
+16-step flow & 2$^3$ & -0.9848 & 6.640 & 0.705\\
+16-step flow & 3$^3$ & -1.1162 & 6.754 & 0.447\\
+\hline\end{tabular}\end{table}
+The two relaxed configurations differed in first-principles energy by 0.0759\,eV/atom on the finer mesh (flow higher). On the coarser mesh drifting was higher by 0.0108\,eV/atom. The rank reversal precludes a robust energy ordering at these settings. Both meshes show lower energies and forces after CHGNet relaxation, but the remaining first-principles forces exceed 0.4\,eV/\AA\ on both fine-mesh configurations. The eight calculations used 0.69 summed CPU hours, outside the surrogate-screen budget. One composition, chosen partly for tractable cost, supplies neither a population estimate nor a DFT hull. The screened hit counts in Table~\ref{t:screen} therefore retain their surrogate interpretation.

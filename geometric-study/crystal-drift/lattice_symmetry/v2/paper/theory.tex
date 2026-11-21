@@ -1,0 +1,141 @@
+\section{A field on physical periodic environments}\label{sec:physical-theory}
+\paragraph{The finite training update.}
+Let $q_i=\Phi(G_\theta(\xi_i,c))$ denote a query feature at exact cell composition $c$.
+In each of eight composition blocks, four independent empirical draws with replacement
+supply features $p_j$, and four independent model seeds supply features $n_j$.
+Write $y=(p,n)$, $H_{ij}=-\|q_i-y_j\|_2/\tau$, and
+\[
+ a_{ij}=\frac{\exp H_{ij}}{\sqrt{\sum_u\exp H_{uj}\sum_v\exp H_{iv}}}.
+\]
+The sums run over the four queries and the eight reference columns of this block.
+Split $a=(a^+,a^-)$ along the reference axis and write $m_i^\pm=\sum_j a^\pm_{ij}$.
+The feature displacement and regression target are
+\begin{align}
+ D_i^\tau&=m_i^-\sum_j a^+_{ij}p_j-m_i^+\sum_j a^-_{ij}n_j,\qquad
+ V_i=\tfrac12\sum_{\tau\in\{0.3,0.8\}}
+ \frac{D_i^\tau}{\sqrt{\langle\|D^\tau\|^2\rangle+10^{-8}}},\label{eq:v2field}\\
+ {\cal L}&=\tfrac12\left\langle
+ \big\|q_i-\operatorname{stop}(q_i+V_i)\big\|^2\right\rangle .\label{eq:v2loss}
+\end{align}
+The mean in each denominator covers every query in the entire minibatch.
+Equation~\eqref{eq:v2loss} gives parameter gradient $-\langle J_i^\top V_i\rangle$
+with $J_i=\partial_\theta\Phi(G_\theta(\xi_i,c))$. We cache positive features and detach
+negative draws and target construction. The Laplacian affinity
+sets the weights. Reference feature differences supply the directions. A diffusion
+transition would instead specify how to sample a state given a previous state.
+At inference the network never visits the training banks.
+
+\paragraph{Why the representation enters the field.}
+Consider the row basis $L=I$ and a shear $U=I+e_1e_2^\top$ of the same one-site
+unit crystal at the origin. A feature containing the nine entries of $L$ assigns unit
+distance between these descriptions. In a one-query, one-positive, one-negative example
+all three may describe this same crystal. Replacing only the positive basis by $U$
+changes the unnormalized displacement from zero to
+$a^+a^-\operatorname{vec}(U-I)$. Equivariance of a generator acting on the query alone
+does not correct this dependence on representations chosen independently for the references.
+
+\paragraph{Radial and angular features.}
+For row fractional coordinates $f_i$, cell $L$ in \AA, and species $z_i$, take each image
+$d=(f_j-f_i+n)L$ of length below $r_c=4$~\AA. Only $i=j,\ n=0$ is omitted.
+If $x=f_j-f_i$, Cauchy--Schwarz gives
+$|x_k+n_k|\le r_c\|(L^{-1})_{:k}\|$ for every accepted image.
+Enumerating the resulting integer intervals and testing the Euclidean radius therefore
+includes all physical neighbors under a shear. Put $s=\|d/r_c\|^2$ and
+\[
+ b_h(s)=\exp[1-(1-s)^{-1}]\,\exp[-\tfrac12(s-h)^2],
+ \qquad 0\leq s<1,\quad h\in\{0,1\},
+\]
+with zero extension past the cutoff. Use real regular solid harmonics
+$T_{\ell m}(d/r_c)$ for $\ell=0,1,2$, with the normalization
+\[
+ \sum_m T_{\ell m}(u)T_{\ell m}(v)=(\|u\|\|v\|)^\ell
+ P_\ell(\widehat u\cdot\widehat v).
+\]
+The polynomial form at the origin assigns value one for order zero and zero for
+positive orders, including at a coincident distinct atom. For each center form
+\[
+ c_{iah\ell m}=\sum_{e:i\to a} b_h(s_e)\, T_{\ell m}(d_e/r_c),\qquad
+ p_{i,ah,bh',\ell}=\sum_m c_{iah\ell m}c_{ibh'\ell m}.
+\]
+This is a discrete density expansion with radial factor $s^{\ell/2}b_h(s)$ in the unit-vector
+harmonic convention. It does not first convolute atoms with Gaussian spatial densities.
+Average the upper-triangular products over centers of each element \emph{after} contraction.
+Seven ordered neighbor-species ranks and two radial channels give $7\cdot105$ entries at
+each order. Ranks refer to increasing atomic number and are compared only within an exact
+composition. Missing ranks are padded with zeros. The shared 177-entry control contains
+log absolute cell volume, 118 global species counts, the nonzero lattice-image shells,
+and the 28 unordered distinct-site species-pair shells divided by twice the site count.
+The full descriptor has 2,382 entries. For each block subtract its training centroid and
+divide by its training root-mean-square Euclidean deviation, floored at $0.01$.
+The common blocks retain identical scales under ablation.
+
+\paragraph{Independent invariance of every query and reference.}
+Let $U\in GL(3,\mathbb Z)$ change the lattice basis, $Q\in O(3)$ change the Cartesian
+frame and $\pi$ permute the sites with their species. Put
+$L'=ULQ$, $f'_{\pi(i)}=f_iU^{-1}+t-h_i$ with integer wrapping vectors $h_i$.
+The image label $n'=nU^{-1}+h_j-h_i$ is integral and runs bijectively over
+$\mathbb Z^3$. Its transformed edge is $d'=dQ$. It preserves radii, species and
+the nontrivial-self-edge rule. Every harmonic coefficient at order $\ell$ therefore
+transforms by the same orthogonal real representation on its $m$ index. Reflection
+contributes parity $(-1)^\ell$ upon decomposing the orthogonal frame change into inversion
+and a proper rotation. Contraction at the same order cancels that action, including parity.
+Pooling commutes with $\pi$. The edge bijection preserves each radial shell, all centers
+have the same lattice-image shell, and $|\det U|=|\det Q|=1$ preserves the log volume.
+The standardized feature vector is unchanged. Applying this argument to each crystal
+with its \emph{own} transformations leaves every affinity and both sides of
+Eq.~\eqref{eq:v2field} unchanged. Enlarging the cell by a nonunimodular supercell map
+is outside the assertion.
+
+\paragraph{Equivariance of the one-call decoder.}
+The network embeds elements, aggregates scalar messages from edge lengths, and passes
+the site embedding, aggregate and log specific volume to its hidden site head. Its radial
+input uses Gaussian channels in $s$ and its message weight is
+$w_{ij}=(1-s)^3/(1+\sum_{e:i}(1-s_e)^3)$ for edges inside the cutoff.
+Bounded scalar edge coefficients multiply the physical vectors to give uncentered
+site shifts $u_i$. Write $v_i=u_i-\sum_j u_j/N$ over the $N$ occupied sites. A second
+bounded coefficient multiplies $(d/r_c)^\top(d/r_c)$ and the result is summed with the
+same edge weights and divided by $N$. Denote this symmetric tensor by $B$. A pooled
+scalar $\alpha\in[-1,1]$ gives $E=(\alpha I+B)/4$. The decoder returns
+\[
+ L_{\rm out}=L\exp E,\qquad
+ F_{\rm out}=(F+vL^{-1})\bmod1 .
+\]
+The fractional displacement uses the \emph{input} lattice before the affine cell update.
+Invariant hidden scalars give $v'=PvQ$ and $E'=Q^\top E Q$. Conjugating the exponential
+gives $L'_{\rm out}=UL_{\rm out}Q$. Since
+$v'(L')^{-1}=PvL^{-1}U^{-1}$, the output sites transform by the same permutation,
+rebasing and origin shift. This pathwise statement pairs a given seed with its image.
+Pushforward sampling laws agree when the transformed seed law is itself that pushforward.
+The study draws physical cells in a specified chart. It does not assume a uniform law
+over integer bases. Differentiation with respect to fractional coordinates yields a
+covector $g_f$. The row-form Cartesian gradient $g_fL^{-\top}$ corresponds to a
+fractional gradient velocity $g_f(LL^\top)^{-1}$ with the inverse metric.
+Here the learned displacement is already a physical vector. For scoring and storage the
+proposal service converts the output Gram matrix to six log-metric entries and decodes
+a canonical row lattice. This last change of Cartesian representative preserves cell
+lengths, angles and all physical position comparisons up to a frame change. Literal
+frame equivariance of matrix entries refers to the decoder before canonicalization.
+
+\paragraph{Which group is guaranteed.}
+For a species-labelled seed symmetry with fractional action $f\mapsto fR+t$,
+$RGR^\top=G$ for $G=LL^\top$. Thus $Q=L^{-1}RL$ is orthogonal.
+Use the intervening permutation of sites, $U=R^{-1}$, and this $Q$ in the decoder
+identity. The reexpressed seed coincides with the initial one. Hence
+$RL_{\rm out}=L_{\rm out}Q$, and its site action maps the labelled output set to
+itself modulo integers. Each named seed operation survives this map in exact arithmetic.
+Some outputs can gain operations or admit coincident sites. Ordinary continuous random
+seeds acquire no prescribed nontrivial stabilizer from the argument.
+
+\paragraph{Equilibrium and its scope.}
+With fixed model, labels and queries, suppose each positive bank and independent
+equal-size negative bank are exchangeable as a pair, jointly over composition blocks.
+Exchanging the banks permutes the columns of $a$, interchanges their masses, and reverses
+every $D^\tau$ simultaneously. Its global RMS is unchanged, so $\mathbb E[V_i]=0$,
+where an individual finite sample can give nonzero drift. The normalized field is
+continuous in finite-dimensional input features and each query norm is bounded by the
+square root of the total query count. Consequently weak convergence of the conditional
+feature laws, for independent banks of fixed sizes, also gives convergence of the
+expected field by convergence of finite products and bounded continuous integration.
+Neither result supplies a converse or a training convergence rate. Finite cutoffs can
+hide all changes to separated sites, and even-parity contractions identify mirror
+environments. Vanishing expected drift cannot identify a unique law of physical crystals.

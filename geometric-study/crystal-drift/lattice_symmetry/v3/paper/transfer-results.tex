@@ -1,0 +1,23 @@
+\subsection{Withheld families and continuous arrangements}
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Five-draw recovery on four explicitly identified cohorts. The first two are protected transfer panels. The last two are exploratory validation strata defined by an independent anonymous-structure search. All listed models use the first two-look selection and seed 11.}\label{tab:transfer}
+\begin{tabular}{lrrrr}\hline
+Generator & Family (228) & Shared (96) & Uncovered (25) & Covered (96)\\\hline
+Symbolic prior & 46 & 60 & 1 & 34\\
+Small angular & 49 & 70 & 1 & 41\\
+Small contact & 49 & 70 & 1 & 41\\
+Small reciprocal & 49 & 69 & 1 & 41\\
+Medium contact & 49 & 70 & 1 & 41\\
+Orbit MeanFlow & 49 & 71 & 1 & 41\\
+\hline\end{tabular}\end{table}
+
+With all members of a structural family withheld, the small contact update changed five-draw recovery by +1.32 percentage points (95\% interval +0.00 to +3.23). For shared symbolic families with held-out chemistry the corresponding gain was +10.42 percentage points (95\% interval +4.17 to +16.67). Family-level resampling preserves correlations between materials from the same group of occupations. The anonymous occupied-pattern vocabulary cannot exactly retrieve any of the 228 withheld-family targets. Their scale-enabled matches therefore need a separate crystallographic check.
+
+Among 512 additional validation targets searched for anonymous analogues within an occupied pattern, 25 lacked a match at the registered tolerance. After this search we froze those IDs with 96 covered controls. At five draws all nine frozen orbit rows recovered the same one of the 25 uncovered targets. The absence of discordances leaves a one-sided 95\% upper bound of 11.3\% on the probability of a discordant target under independent sampling. In the covered controls, the small contact map recovered 41 of 96 and the prior 34. The contrast within each group is paired. The search that defined these two strata prevents interpreting their raw recovery difference as a causal effect of template availability.
+
+At 20 draws the three small contact fits recovered 88, 88, 88 of 228 excluded-family targets, compared with 69 for the identical prior. The seed-averaged difference was +8.33 percentage points (95\% interval +4.61 to +12.90). Extra draws improve the chance of meeting the matcher even when the exact occupied pattern lies outside the available catalog.
+
+For the seed-11 small contact model, none of the 49 scale-enabled hits on withheld families had the reference space-group type under independent detection at either 0.01 or 0.10~\AA{} in the best accepted proposal. At 20 draws, two targets had at least one accepted proposal with the correct detected group under the primary tolerance, both before and after refinement. None of the 21 newly recovered targets had such a proposal. Returning the correct crystal family and satisfying the published scale-enabled matcher are distinct endpoints on this challenge.
+
+Supplying the target's element-labelled occupied pattern tests a different input regime. On the 96 frozen confirmation targets, the independently rerun medium contact pipeline recovered 51 at five draws when inferring the pattern and 70 when supplied with it. With the supplied pattern alone, its zero-call prior recovered 66. The 19-target difference from supplying the pattern was larger than the four-target gain from refining its continuous geometry. The supplement records the chart failure and the numerical sensitivity of the inferred rerun.

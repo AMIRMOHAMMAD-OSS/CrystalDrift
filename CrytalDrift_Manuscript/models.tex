@@ -1,0 +1,48 @@
+\section{Generating a crystal from its composition}
+\label{sec:crystal-generator}
+
+The input specifies how many atoms of each element occupy the unit cell. For instance, a Ga$_4$Te$_4$ cell has eight sites to place, even though its reduced formula is GaTe. The output consists of a nonsingular lattice $L$ and one fractional position $f_i$ for each atom. With lattice vectors stored in rows, the Cartesian positions are $(f_i+n)L$ for $n\in\mathbb Z^3$. The input composition specifies neither the lattice nor the arrangement of the eight sites. In our main model, the first choice is a plausible pattern of occupied symmetry orbits. The network then predicts a continuous change to a sampled realization of that pattern.
+
+\subsection{A site generator from a stochastic cell}
+
+We first consider how much structure the network can generate without an occupied pattern. A ridge regression fitted on training compositions predicts the log volume per atom. We sample a residual and a traceless log stretch using distributions fitted separately by site count. Together these determine the starting cell. Each atom receives an independent uniform fractional position. The site generator then computes chemically weighted messages on the physical periodic neighbor graph. Sums of learned scalar multiples of neighbor vectors give the site updates, and a tensor built from their outer products deforms the lattice. The same map from starting crystals to outputs is used for the pair, center-radial and angular objectives. The angular comparison therefore changes what supervises this network while preserving its work at inference.
+
+We compare this generator with a compact velocity model which starts from the same cell and site prior and takes sixteen Euler steps. The flow learns velocities in a fixed lattice chart and in wrapped fractional coordinates. A further control trains a one-call fixed-basis set network with the same angular descriptor as the periodic graph model. These controls distinguish the choice of generator from the choice of representation for comparing structures during training.
+
+\subsection{Sampling an occupied pattern}
+
+A Wyckoff orbit describes the sites obtained by applying the space-group operations to one representative position. An occupied pattern specifies which orbits carry which elements. It constrains the possible crystal structures to different degrees. An orbit with no free coordinates fixes its sites once the cell and setting have been chosen, whereas a general position can have three continuous coordinates. A model can consequently obtain considerable structural information from a good choice of occupied pattern, even when it receives no target coordinates.
+
+Space Group Conditional Flow Matching restricts a trajectory to a supplied set of Wyckoff positions~\cite{sgfm}. Orbitol similarly takes occupied positions as input and predicts orbit-level atom types, free coordinates, and a compatible lattice~\cite{orbitol}. In formula-conditioned prediction the occupation itself is unknown. We construct a catalog of patterns from training structures whose conventional and primitive cells can be mapped into one another. For a requested composition we search for compatible multiplicities, assign the elements to equal-count roles using their chemical proximity in Mendeleev order, and rank distinct patterns. The first proposal uses the first admissible pattern. Subsequent proposals visit the remaining patterns in order and cycle through a short list. Each visit draws fresh free coordinates. We draw a compatible cell shape and a composition-adjusted volume from training data and expand the representative positions using the chosen operations. If the search returns no compatible template, a $P1$ cell allows each atom to occupy a general site. Figure~\ref{fig:crystal-workflow} shows which parts of this procedure use the training catalog. In particular, the main experiment infers the occupied pattern before applying any learned update.
+
+The sampled crystal $X_0$ is already a candidate structure. We save it before applying the trained map $G_\theta$, which gives two proposals from the same realization. Thus a draw of $X_0$ and a draw of $G_\theta(X_0)$ share their group, orbit occupations, initial lattice and free coordinates. Comparing these outputs on the same targets measures what the learned map adds to its starting geometry. We separately consider a stronger prior that transfers the continuous geometry of a chemically related donor as well as its pattern, and a diagnostic in which the reference occupation is supplied.
+
+\subsection{One joint update of sites and lattice}
+
+For each site, the network enumerates all periodic images within 4~\AA. Its messages depend on the species of the two sites and the distance between their images. Learned scalar coefficients weight the physical edge vectors to form site displacements. These vectors rotate with the crystal. The corresponding weighted outer products transform as rank-two tensors and provide directional information for the cell update. Scalar features are pooled over symmetry-equivalent sites. Communication between the resulting orbit representations allows the update of one occupied orbit to depend on the others.
+
+The sites of one orbit cannot move independently. We project their proposed displacements onto changes of their shared free coordinates by least squares and expand the updated representatives using the original symmetry operations. The cell head predicts a symmetry-compatible deformation of the shape and a positive change in volume. Keeping these two quantities separate also permits a direct diagnostic in which the updated fractional sites and cell shape are retained while the starting volume is restored. The network returns both lattice and sites in one evaluation per proposed crystal. Sampling five proposals entails five such evaluations.
+
+\crystaltheorem{thm:decoder}{Symmetry of the Wyckoff update}{%
+Let \(X_0\) be a seed with a nonsingular lattice, a compatible occupied Wyckoff chart, and requested space group \(H\) acting in that chart. Let \(G_\theta\) be the one-step orbit decoder with complete periodic neighborhoods. In exact arithmetic, for a change of representation \(g\) from Theorem~\ref{thm:field}, with the chart and orbit labels transported along with the seed,
+\[
+ G_\theta(gX_0)=gG_\theta(X_0),
+ \qquad H\ \subseteq\ {\rm Sym}\bigl(G_\theta(X_0)\bigr).
+\]
+The inclusion is expressed in the original fractional setting. Here \({\rm Sym}\) consists of the operations preserving the output lattice metric and its species-decorated sites.}
+
+\emph{Proof.} Under a Cartesian frame change \(Q\), each proposed site displacement and each physical chart tangent transforms by the same orthogonal matrix. Their inner products are unchanged, so the orbit-wise least-squares problem gives the same projected motion in the new frame. The cell strain transforms by conjugation, and its volume factor is a scalar. The output lattice and sites therefore transform with the input. For each operation in \(H\), the seed metric and the labeled occupied orbits are invariant. The equivariant cell update retains metric compatibility, and updating a shared orbit representative moves all its symmetry partners together. Thus every requested operation still preserves the output. Appendix~\ref{app:decoder-proof} gives the matrix calculation. \(\square\)
+
+The group in Theorem~\ref{thm:decoder} is the one selected for the seed. Its operations can all survive even when the selected group differs from the reference group. A special choice of the free coordinates can also introduce additional symmetry.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=.96\linewidth]{workflow.pdf}
+\caption{The input formula determines which training patterns are eligible. Sampling the cell and free orbit coordinates gives the common starting crystal for both branches of the paired experiment. Only the learned branch updates its geometry. The positive and generated reference structures shown on the training branch are used to fit the network.}
+\label{fig:crystal-workflow}
+\end{figure}
+
+\subsection{What changes in a kernel comparison}
+
+The periodic network and its input remain fixed when we replace pair-distance features by angular powers or add contact and reciprocal-space features to the drift objective. In the controlled comparison we also share the initialization, starting structures, reference draws and training budget. An independent comparison trains the same orbit network with a MeanFlow objective~\cite{meanflow}. In contrast, the released uFlowCSP network and the smaller versions we train from scratch use the published architecture and its own Cartesian Gaussian starting distribution~\cite{uflow}. We therefore compare each of these generators with the actual starting structures it received.
+

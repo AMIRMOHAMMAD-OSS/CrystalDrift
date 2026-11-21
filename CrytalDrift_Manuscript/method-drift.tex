@@ -1,0 +1,38 @@
+\section{Drift in periodic crystal features}\label{main:drift}
+
+The training field depends on how strongly each reference attracts or repels a generated sample. A distance between raw cell matrices cannot serve this purpose. For example, consider a one-site cubic cell with lattice matrix \(I\). A reference copy stored with the same basis is at zero Frobenius distance. Adding the second lattice vector to the first changes one off-diagonal entry to one. The distance is now one, although the two crystals still coincide. The problem occurs even when only the reference changes basis.
+ 
+We use the invariant-embedding approach of SymDrift \cite{symdrift}, which also develops an alternative based on aligning coordinates. Here the embedding must account for the periodic lattice as well as the atomic sites. For a crystal \(X\) of a given composition, let \(\Phi(X)\) be a vector of standardized geometric features. The distance \(d(X,Y)=\|\Phi(X)-\Phi(Y)\|_2\) gives two possible affinities at temperature \(T>0\),
+\begin{equation}
+ K_T^{\rm L}(X,Y)=\exp[-d(X,Y)/T],\qquad
+ K_T^{\rm G}(X,Y)=\exp[-d(X,Y)^2/(2T^2)] .
+ \label{eq:drift-affinities}
+\end{equation}
+Changing the descriptor changes which differences between crystals the training objective can see. Changing the affinity changes the weight assigned to a given distance. The scalar kernel plays a role during training only. At sampling time the fitted generator updates the seed in one evaluation.
+
+\paragraph{What enters the distance.}
+The pair descriptor records cell volume, elemental counts and smooth counts of periodic neighbors in radial shells. Center-wise radial and angular descriptors retain correlations between neighbors of the same atom. The angular descriptor contracts solid harmonics of orders \(0,1,2\), then averages over centers of the same species. We also train with additional channels that record variation among occupied orbits, contacts between distinct occupied orbits, or structure-factor cross intensities in reciprocal space. The contact channels distinguish orbit pairs by their elements and multiplicities. The reciprocal channels describe correlations in the periodic density across the cell. A separate radial-resolution control adds four finer pair shells to the angular descriptor. Each block is centered and scaled with training statistics, so adding one block leaves the common coordinates at their original scale. Appendix~\ref{app:proofs} gives the definitions and the invariance argument.
+
+\paragraph{How a kernel trains the generator.}
+We use the attraction--repulsion objective of Deng et al.~\cite{deng}. A training anchor specifies a unit-cell formula. In each bank, two generated query vectors \(x_i\) are compared with two data vectors \(p_j\) and two separately generated reference vectors \(n_j\) of that formula. An affinity gives a larger weight to a nearby reference. After normalizing across reference columns and query rows, let \(w^+_{ij}\) and \(w^-_{ij}\) denote the positive and negative weights, and \(m_i^\pm=\sum_j w^\pm_{ij}\). The training direction at one temperature is
+\begin{equation}
+ D_i^T=m_i^-\sum_j w^+_{ij}p_j-m_i^+\sum_j w^-_{ij}n_j .
+ \label{eq:bankdirection}
+\end{equation}
+This is the difference between the weighted real and generated centroids multiplied by \(m_i^+m_i^-\). Averaging the RMS-normalized directions over temperatures gives \(V_i\). During backpropagation, \(x_i+V_i\) is held fixed as the regression target for \(x_i=\Phi(G_\theta(\text{seed}_i))\). Thus the generator learns from the displacement in feature space, with the derivative of its own descriptor supplying the connection to coordinates and lattice.
+
+\subsection{Independence of the crystal representation}
+
+The raw-cell example at the start of this section also changes the field itself. In a bank of identical one-site cubic crystals, the two centroids in Eq.~\eqref{eq:bankdirection} coincide, so the raw-cell direction is zero. Suppose just one positive reference is stored with a sheared basis \(U\) in place of \(I\). Its weight is strictly positive for either affinity in Eq.~\eqref{eq:drift-affinities}. The raw-cell direction is now a positive multiple of \(U-I\), although every crystal in the bank represents exactly the same structure.
+
+\crystaltheorem{thm:field}{Invariance of the periodic drifting field}{%
+Let \(\mathcal B=(X_1,\ldots,X_m)\) contain all queries and references in a training batch. Each full-rank crystal \(X_j\) may undergo its own change \(g_j\) of Cartesian frame, lattice basis within \({\rm GL}(3,\mathbb Z)\), origin, periodic images, and site order. With complete physical cutoff neighborhoods and fixed descriptor scales, every field in Eq.~\eqref{eq:bankdirection} satisfies
+\[
+ V_i(g_1X_1,\ldots,g_mX_m)=V_i(X_1,\ldots,X_m)
+ \qquad\text{for every query } i .
+\]
+For descriptors of occupied orbits, each change of representation carries the orbit partition with the sites.}
+
+\emph{Proof.} For a basis change \(U\) and an orthogonal frame change \(Q\), the row lattice becomes \(ULQ\). Reindexing the periodic images sends each physical displacement \(d\) to \(dQ\). Lengths, angular inner products and the species and orbit labels attached to each contact are preserved. Reciprocal vectors likewise retain their lengths, and the common phase induced by an origin shift cancels in each cross intensity. Thus the feature vector of each crystal is unchanged. Both kernel affinities, the two normalized centroids and the batch RMS are functions of these vectors. This proves the equality for each realized batch. Appendix~\ref{app:field-proof} gives the reindexing for each feature map. \(\square\)
+
+Theorem~\ref{thm:field} concerns what direction the generator sees during training. Whether that direction vanishes is a separate question. If the positive and negative banks are conditionally exchangeable, their swap reverses \(V_i\) and preserves its normalization. Proposition~\ref{prop:bank} gives the resulting zero-mean statement and explains how fixing a training anchor can break the hypothesis. Even a vanishing field need not identify a crystal uniquely. Appendix~\ref{app:collision} gives two inequivalent periodic arrangements that the descriptors map to the same vector.

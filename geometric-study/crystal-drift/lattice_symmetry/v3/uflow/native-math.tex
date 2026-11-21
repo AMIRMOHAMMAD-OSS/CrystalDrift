@@ -1,0 +1,51 @@
+\paragraph{Native Gaussian control for the published architecture.}
+The released Cartesian sampler draws each of its twelve scalar channels independently
+at each of 100 padded tokens. For one channel let $g_a\sim\mathcal N(0,1)$ independently
+and $e_a=g_a-\bar g$. With $n$ occupied sites, each of the nine decoded cell entries
+for the zero-call control is $n^{-1}\sum_{a=1}^{n}e_a$. Its variance is
+$\sigma_n^2=n^{-1}-100^{-1}$, including the covariance between $\bar g$
+and the occupied-token mean. The nine entries remain independent across channels.
+Writing $L=\sigma_n A$ for a standard normal $3\times3$ matrix, columnwise
+orthogonalization gives $|\det A|$ as the product of independent $\chi_3,\chi_2,\chi_1$
+variables. Hence
+\[
+ \mathbb E[|\det L|\mid n]=2\sqrt{2/\pi}\,\sigma_n^3,
+ \qquad \mathrm{Var}(|\det L|\mid n)=(6-8/\pi)\sigma_n^6.
+\]
+For 12 sites the predicted mean is $0.03169$~\AA$^3$ and the observed mean is
+$0.03158$~\AA$^3$. Among the 180,920 native prior draws on the 9,046 official
+formulas, 141,900 had positive volume below $0.1$~\AA$^3$.
+All site-count-specific means were within 2.29 theoretical standard errors.
+These proposals remain in the scale-enabled and native-volume denominators.
+
+\paragraph{Published average-velocity control.}
+Let $x$ contain the occupied Cartesian coordinates and repeated lattice entries,
+$z=x+t(e-x)$, and $v=e-x$. The official transport draws $0<r\le t<1$.
+One quarter of each minibatch receives $r=t$ (rounded down).
+With probability $0.8$ it sets $v_*=v$ and uses a null crystal system.
+Other samples receive $v_*=1.5v-0.5u_{\mathrm{EMA}}(z,t,t,\varnothing)$.
+In both cases let $D u=J_z u\,v_*+\partial_tu$ at fixed $r$ and sampled context.
+For sample $b$, the squared error $d_b$ is the mean over its occupied tokens and
+twelve output channels of
+$[u-\mathrm{stop}(v_*-(t-r)Du)]^2$. The batch loss averages
+$d_b\,\mathrm{stop}[(d_b+10^{-3})^{-1}]$. The reference implementation
+computes the directional derivative with \texttt{torch.func.jvp}. An independent
+affine-velocity calculation on twelve masked 100-token examples reproduced its loss,
+unweighted mean squared error and stopped parameter gradient (0.10893675045).
+At inference the network receives the supplied atom counts and null system and
+returns $z-u(z,1,0)$ in one forward evaluation. The constrained periodic equivariance
+theorems for CrytalDrift apply to the corresponding geometric decoder.
+
+The Cartesian control first sorts the supplied species multiset by electronegativity
+and atomic number. For fixed ordered noise this preprocessing gives the same input
+tokens, hence the same decoded arrays, for every presentation of the formula.
+Inside the transformer a position code indexed by the cumulative valid-token count
+is added before attention. Exchanging two equal species and their noise vectors
+therefore need not commute with the learned update. Likewise a generic learned
+linear projection of Cartesian components need not commute with a simultaneous
+rotation of the coordinate and lattice rows. On two fixed formula/noise fixtures,
+both eight-pass EMAs reproduced reordered-formula outputs exactly. Their largest
+velocity discrepancies after exchanging equal-species noise vectors were $0.787$
+and $0.984$ for the small and medium networks. Under a fixed Cartesian quarter-turn
+the discrepancies were $4.700$ and $4.629$ in native output units. These comparisons
+concern pointwise commutation at fixed coupled noise.

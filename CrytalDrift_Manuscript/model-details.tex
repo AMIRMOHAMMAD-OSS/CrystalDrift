@@ -1,0 +1,60 @@
+\section{Generator implementation and training}
+\label{app:generator-implementation}
+
+\subsection{Constructing the starting cell}
+
+The orbit model has 26,419 eligible primitive training cells at 24,310 distinct exact compositions. A candidate pattern is an element-labelled multiset of occupied Wyckoff positions in a specified Hall setting. To build the list for a target, we first compare the multiplicities of the elements per primitive cell. Within a compatible signature we order the element roles by count, Mendeleev number and atomic number. The chemical distance is the mean distance in Mendeleev number with an additional two-unit penalty for mismatched elements. Repeated occurrences of the resulting labelled occupied pattern occupy a single position in the list.
+
+Once a pattern has been selected, the shape donor is drawn preferentially from the same multiset of occupied Wyckoff letters, followed by the same group and then the eligible catalog. We average the conventional cell metric over the selected group and scale it using the composition-based volume prediction and the sampled donor residual. Independent uniform free parameters place the orbit representatives. The centering translations supply the map from the conventional orbit expansion to the primitive cell. During training, all donors at the anchor's reduced formula are excluded from both pattern and cell lookup. Of 105,676 first-traversal training seeds, 544 used the $P1$ fallback and 86.44\% had a movable coordinate in at least one orbit. The prior is thus informative about both discrete and continuous structure, and some templates permit the network to alter only the cell.
+
+\subsection{Site messages, orbit features and lattice deformation}
+
+A primitive cell contains $N$ atoms. An edge from site $i$ to an image of site $j$ has Cartesian displacement $d_e$ and squared relative length $s_e=\|d_e\|^2/(4\,\text{\AA})^2$. Only edges with $s_e<1$ enter. Nonzero images of a site are included among its neighbors. The message weight is
+\[
+ w_e=\frac{(1-s_e)^3}{1+\sum_{e':\,i\to\cdot}(1-s_{e'})^3}.
+\]
+Five radial inputs are $\exp[-5(s_e-c)^2]$ for $c=0,1/4,1/2,3/4,1$. At each site we concatenate a 12-dimensional element embedding, the weighted sum of neighboring element embeddings, the five weighted radial sums, orbit multiplicity, the number of free coordinates, log volume per atom, a function of site count, and two time inputs. The drift generator fixes the time inputs at zero and one. A linear projection and a separate element embedding give the initial site representation.
+
+We average these representations within occupied orbits. Each residual multilayer perceptron then receives a linear projection of the crystal-wide mean as well as the current orbit representation. The mean weights an orbit by its site multiplicity. Layers use normalization, a twofold hidden expansion, and the SiLU activation. The small and medium networks use widths 114 and 319 and depths three and four, respectively. Their parameter counts are 218,497 and 2,098,297. The local control omits the global mean from these layers. Another control retains the earlier site-based network and widens it to 218,883 parameters. This separates the effect of global orbit aggregation from a change in model size.
+
+In the orbit network, the output representation is projected back onto each of its sites. A two-output edge network takes the endpoint representations and radial inputs, returning two scalars $a_e,b_e$ bounded by $w_e$ in absolute value. The site update begins with the Cartesian vector $v_i=\sum_{e:i\to\cdot}a_e d_e$. If the fractional sites of an orbit are $f_i(u)$ in free parameters $u$, we fit one parameter increment $\delta u$ to all its vectors by minimizing
+\[
+ \sum_{i\ {\rm in\ orbit}}
+ \big\|\delta u\, J_i L-v_i\big\|^2,
+ \qquad J_i=\frac{\partial f_i}{\partial u}
+\]
+in row-vector notation. We use a pseudoinverse, so a fixed orbit receives zero displacement. Wrapping $f_i+\delta u J_i$ supplies the output fractional coordinates. The chart is affine within a selected orbit, allowing all related sites to be updated from the same increment.
+
+For the shape update let $B=N^{-1}\sum_e b_e d_e^\top d_e/(4\,\text{\AA})^2$, $A=I+0.3 B$, and $S=A/|\det A|^{1/3}$. A scalar head applied to the multiplicity-weighted orbit mean gives $\lambda=0.6\tanh h$. The output lattice is $L'=L S\exp(\lambda/3)$. Under a change of Cartesian frame each edge rotates and $B$ transforms by conjugation. Its tensor construction and the common free-coordinate update preserve the template's requested operations when its full orbit is represented. The generated structure can also satisfy additional operations at a special metric or special coordinates.
+
+\subsection{Descriptor variations in the orbit experiment}
+
+Appendix~\ref{app:proofs} gives the physical definitions and their invariance properties. Table~\ref{tab:generator-kernel-dimensions} identifies the combinations used to train the orbit generator. Two radial shells and seven species slots give 14 species--shell channels. Contracting the channels in pairs within one harmonic order gives 105 upper-triangular entries for each central species. Each order therefore contributes 735 features.
+
+\begin{table}[tbp]\centering\small
+\caption{Dimensions and affinities of the orbit training objectives. The lower four rows each extend the same angular descriptor.}
+\label{tab:generator-kernel-dimensions}
+\begin{tabular}{lrl}\hline
+Training descriptor & Dimension & Affinity tested\\\hline
+Pair and lattice shells, element counts, log volume & 177 & Laplace\\
+Pair descriptor and center-wise order zero & 912 & Laplace\\
+Pair descriptor and angular orders zero through two & 2,382 & Laplace, Gaussian\\
+Angular and between-orbit variance & 2,385 & Laplace\\
+Angular and typed inter-orbit contacts & 3,054 & Laplace, Gaussian\\
+Angular and reciprocal cross intensities & 2,466 & Laplace\\
+Angular and finer species-pair shells & 2,494 & Laplace\\\hline
+\end{tabular}
+\end{table}
+
+The six original descriptor variants used the Laplace affinity. We repeated the angular and contact objectives using the Gaussian affinity. We standardized each block with its own training mean and root-mean-square centered Euclidean norm, flooring the scale at 0.01. The normalizers of surviving blocks were kept fixed during ablation. From 256 training cases we estimated the median angular-feature distance between starting and observed structures. Multiplying by 0.3 and 0.8 gave the common temperatures 0.741924 and 1.978464. With these conventions a descriptor comparison changes both the affinities and the displacements among reference features.
+
+\subsection{Exposure, checkpoint choice and comparators}
+
+Each of the 26,419 eligible anchor structures appears once per traversal. For an anchor we draw two generator queries and two independent generated references. The anchor itself supplies one positive structure and the other is sampled with replacement at the same exact cell composition. For 22,916 anchors the training split contains a single distinct positive structure. This sparsity limits how much variation can be learned about different packings of the same composition. In particular, the scheduled anchor and the additional random positive have different sampling roles.
+
+The principal orbit fits use 16 anchors per minibatch, full-precision arithmetic and AdamW with momentum parameters $(0.9,0.99)$ and weight decay 0.001. We warm up the learning rate to $3\times 10^{-4}$ over 16 updates and clip the gradient norm at 2. One traversal comprises 1,652 updates and 274,066 anchor atoms. The original kernel comparison used checkpoints after 13,184 and 26,419 anchors and selected the earlier in case of equal five-draw recovery on 96 development targets. A distinct 96-target panel scored the selected checkpoint. For the comparison at fixed exposure we used each kernel's full-traversal weights. The experiments used a GeForce RTX 3060 Laptop GPU with 6~GiB of device memory.
+
+For extended fits we regenerated training seeds and reference draws for each subsequent traversal and evaluated at half, one, four and eight traversals. Eight traversals correspond to 211,352 anchor exposures, although the selected orbit-generator weights in this series came from the first half-traversal. Independent fits with seeds 11, 23 and 37 test variation of the angular and contact comparisons at small and medium capacity. We also trained a 15,011,747-parameter angular model and a 135,992,027-parameter contact model for one traversal each. The larger contact model fit two anchors per update, requiring 13,210 updates to attain the same exposure.
+
+The same-backbone MeanFlow control starts from the identical symbolic seeds. It assigns same-element sites between a reference and a seed, projects the displacement into the occupied-orbit chart and uses a group-compatible endpoint for the cell. The average-velocity loss then trains the same lattice and site heads. Event times are drawn on a separate random stream in the strictly paired control, preserving the complete anchor order used for drift. The native uFlowCSP controls use the released transport, chemistry-conditioned transformer architecture and centered Gaussian input law. Reducing depth and width gives networks with 233,868 and 2,135,052 registered parameters; the released full-size checkpoint has 131,215,116. Each native control is scored against its own Gaussian start as well as against the trained generators at equal numbers of proposals. The optional learned template ranker evaluates all patterns in the formula-derived list together. Applying it and then refining $k$ candidates costs one ranking call and $k$ generator evaluations.
+

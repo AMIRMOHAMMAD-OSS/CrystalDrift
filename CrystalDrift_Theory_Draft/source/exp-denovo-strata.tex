@@ -1,0 +1,13 @@
+\subsection*{Raw geometry at seen and unseen reduced formulas}
+\begin{table}[!htbp]\centering\footnotesize\setlength{\tabcolsep}{3pt}
+\caption{Geometry of the five primary de novo banks by formula overlap with the MP-20 training split. In each group $n$ counts draws, SV is the percentage passing structural validity, $r$ is the median closest distinct-site distance in \AA, and $W$ is the unfiltered density Wasserstein distance in g\,cm$^{-3}$ against held-out references in the same group. There are 1,896 formula-seen and 7,150 formula-unseen test references. The shared learned-prior arms have the same group membership.}\label{tab:dng-strata}
+\begin{tabular}{lrrrrrrrr}\hline
+&\multicolumn{4}{c}{Formula seen in training}&\multicolumn{4}{c}{Formula unseen in training}\\
+Prior and geometry & $n$ & SV & $r$ & $W$ & $n$ & SV & $r$ & $W$\\\hline
+Empirical + CrytalDrift & 10000 & 90.7 & 1.01 & 1.411 & 0 & \textemdash & \textemdash & \textemdash\\
+Learned + CrytalDrift & 3522 & 91.1 & 1.10 & 1.449 & 6478 & 90.5 & 0.98 & 0.588\\
+Learned + flow (16) & 3522 & 91.4 & 1.14 & 1.208 & 6478 & 90.3 & 1.01 & 0.529\\
+Learned + uFlowCSP & 3522 & 96.2 & 2.16 & 1.199 & 6478 & 94.2 & 1.49 & 0.133\\
+CrystalFlow (joint) & 1377 & 99.7 & 2.34 & 1.359 & 8622 & 99.6 & 1.88 & 0.562\\
+\hline\end{tabular}\end{table}
+The evaluator caps the reported closest-site distance at 10.5\,\AA, including for cells with one site. A single empty published CrystalFlow record has no formula or geometry and enters neither group. The seen and unseen groups average over different chemistry. Within each group the three shared-prior arms allow a comparison of the conditional generators on identical compositions.

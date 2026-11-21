@@ -1,0 +1,19 @@
+% Source paths are relative to crystal-drift/paper/main.tex.
+% The three figure blocks can be placed independently.
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\linewidth]{../figures-v2/crytaldrift-workflow.pdf}
+\caption{CrytalDrift's binary model. A given cell composition or a sample from the chemistry prior, together with cell and site noise, determines the input to one generator evaluation. During training, the live query is differentiated through a periodic feature map. The attraction--repulsion field uses detached features from real and independently generated references. Physical relaxation is a separate operation on completed structures.}
+\label{fig:crytaldrift-workflow}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\linewidth]{../figures-v2/crystal-examples.pdf}
+\caption{The first four distinct cell formulas among the fixed 32 generated candidates, before and after CHGNet relaxation. Saturated spheres represent central-cell sites, pale spheres show nearby periodic copies, and thin rods outline the cell. Sticks join displayed sites within 1.18 times the nearest periodic distance of either endpoint and indicate geometric proximity. Both states use the same orthographic direction and physical scale. The LiPd$_3$ sample reached the step limit with a 0.313\,\AA{} contact.}
+\label{fig:crytaldrift-examples}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering\includegraphics[width=\linewidth]{../figures-v2/unseen-examples.pdf}
+\caption{The first four distinct reduced formulas absent from the restricted training set among the fixed 32 candidates. Selection used the generated order and training-membership flag. The generated and relaxed cells use the same physical scale and drawing convention as Fig.~\ref{fig:crytaldrift-examples}. All four met the generalized optimizer stopping rule. CuAu$_4$ and VBr$_2$ have same-formula references elsewhere in MP-20.}
+\label{fig:crytaldrift-unseen}
+\end{figure}

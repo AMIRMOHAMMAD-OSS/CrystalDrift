@@ -1,0 +1,139 @@
+\section{What a crystal generator learns from its starting structure}
+\label{app:geometry-transfer}
+
+\subsection{Availability of the reference occupation}
+
+For a formula with several admissible structures, the choice of occupied Wyckoff orbits determines which atomic motions remain possible. We examined this choice before scoring the continuous coordinates. For each proposed pattern we compared its space-group type, its element-labelled Wyckoff occupations in the reference Hall setting, and its occupations after a simultaneous change of setting. The last comparison applies a single admissible letter permutation to all sites of the crystal. Applying different permutations to different elements could spuriously identify two inequivalent patterns. The PyXtal 1.0.9 setting tables supplied 878 distinct permutations across the 230 space groups \cite{pyxtal}.
+
+Within five proposals, the chemical shortlist included the reference space-group type for 7,705 of 9,046 MP-20 targets. It included the exact occupation in the original setting for 6,998 targets and a setting-equivalent occupation for 7,469. Seven reference charts failed verification and remain in the denominator. Of the 45,230 proposed templates inspected, 6,331 had no free positional parameter. On those draws the refiner could alter the lattice while the occupation fixed all fractional coordinates.
+
+\begin{figure}[tbp]
+\centering\includegraphics[width=.94\linewidth]{template-coverage.pdf}
+\caption{Availability of the reference symmetry among the ordered proposals. The official test curve distinguishes a space-group match from a match of all element-labelled occupations. A family withheld from the catalog has no exact representative. An unfamiliar continuous arrangement may still have a represented occupation.}
+\label{fig:gen-template}
+\end{figure}
+
+Keeping the shortlist fixed allowed us to compare chemistry-based ordering, training frequency and a learned ranker. A separate question was whether placing the correct pattern earlier improved the structures sampled from it (Table~\ref{tab:gen-rank}). At five proposals the learned ranker added 137 targets with the reference occupation and lost 78. The paired difference was $+0.65$ percentage points (95\% interval $+0.33$ to $+0.98$). Five-draw structural recovery with the zero-call geometry sampler changed by $-0.17$ points ($-0.72$ to $+0.38$). A learned ranking requires one network evaluation per shortlist. Refining its first $k$ proposals adds $k$ evaluations.
+
+\begin{table}[tbp]\centering\small
+\caption{Template ordering on the official test set. Pattern coverage counts targets with an equivalent element-labelled occupation in the first $k$ draws. The last column counts targets with an accepted crystal sampled directly from the first five templates. Each column has 9,046 targets.}
+\label{tab:gen-rank}
+\begin{tabular}{lrrrr}\hline
+Ordering & Coverage@1 & Coverage@5 & Coverage@20 & Seed hits@5\\\hline
+Chemical lookup & 5,766 & 7,469 & 7,955 & 4,795\\
+Training frequency & 3,822 & 6,481 & 7,955 & 4,291\\
+Learned ranker & 5,792 & 7,528 & 7,955 & 4,780\\\hline
+\end{tabular}
+\end{table}
+
+We verified the change from conventional to primitive coordinates on all 1,731 Wyckoff charts at two independent parameter values. The recovered multiplicities and free ranks agreed with the conventional charts, and the maximum bidirectional wrapped-coordinate residual was $8.9\times10^{-16}$. On a further 32 validation formulas, 160 draws across five pipelines retained their requested finite operation sets at $0.01$~\AA. Public structure matching accepted 149 of 160 native-to-conventional round trips in both directions. Independent primitive reduction of both cells recovered the remaining eleven. This numerical check distinguishes a change of cell convention from a failure of the generator to realize the requested orbit.
+
+The distinction also appears within the contact model's accepted proposals. Of the 7,469 targets with a reachable occupation at five draws, 4,936 had a scale-enabled match and 4,620 had a match on a draw carrying that occupation. Another 234 matches occurred among the 1,570 targets known to lack their occupation in the first five draws. Geometric recovery can therefore exceed recovery of the crystallographic pattern even when the generated cell has the specified formula.
+
+\subsection{Changing the information supplied at inference}
+
+We gave the frozen contact and angular refiners the reference Hall setting and the element-labelled occupied orbits for 96 confirmation targets. The target volume and free positional coordinates remained hidden. In this condition all five draws sampled the same occupation. Under formula-only conditioning they visited the chemically ranked templates. The two conditions used the same rule to generate continuous parameters, although a change of occupation could change the eligible cell donor. Within each condition the network and the zero-call control received identical initial structures.
+
+\begin{table}[tbp]\centering\small
+\caption{Supplying the occupied orbits on 96 targets. Hits count targets with a scale-enabled match. Native hits additionally require the correct physical volume within a factor of 1.10 on the same draw. RMS is the mean best normalized displacement among the targets recovered at five draws.}
+\label{tab:gen-supplied}
+\begin{tabular}{llrrrr}\hline
+Occupation & Update & Hits@1 & Hits@5 & Native hits@5 & RMS@5\\\hline
+Inferred & Seed alone & 30 & 48 & 38 & 0.266\\
+Inferred & Angular & 31 & 50 & 32 & 0.233\\
+Inferred & Contacts & 32 & 51 & 34 & 0.238\\
+Supplied & Seed alone & 38 & 66 & 53 & 0.220\\
+Supplied & Angular & 43 & 70 & 54 & 0.187\\
+Supplied & Contacts & 44 & 70 & 48 & 0.187\\\hline
+\end{tabular}
+\end{table}
+
+Supplying the occupation raised the contact model's five-draw count from 51 to 70 ($+19.79$ points, 95\% interval $+10.42$ to $+29.19$). With that occupation supplied, the learned update added four targets to the 66 recovered by its own starting structures ($+4.17$ points, $+1.04$ to $+8.33$). All five supplied-pattern failures came from \texttt{mp-1079901}, whose 20-atom deposited cell mapped to ten atoms in the primitive chart. We retained all five failures. In the separate CPU replay used for this comparison, one inferred contact result crossed the matcher boundary relative to the original confirmation run. The archived run recorded 50 matches and this replay recorded 51.
+
+The earlier conventional-cell model gives a second supplied-pattern comparison. On all 9,046 public targets its one-draw prior recovered 4,152 structures and its angular refiner recovered 4,549 ($+4.39$ points, $+3.90$ to $+4.90$). On a separate panel of 128 supplied occupations, twenty draws recovered 101 targets for the prior, 106 for the angular update and 121 for released 40-call DiffCSP++. These results use the earlier weights and cell convention.
+
+Transferring a donor's continuous geometry supplies still more information. Chemical retrieval of a complete training arrangement recovered 7,786 of 9,046 targets at five draws. Updating the same starts with angular drift recovered 7,780. Removing 90 targets with a tight species-preserving training match left 7,705 recoveries in 8,956 targets for direct transfer. In the full set, direct transfer recovered 859 of 1,172 targets with an exact composition in the protected training rows and 6,927 of the other 7,874. Element reassignment can reuse an existing packing at a different composition. Attributing that packing to the network would overstate the learned contribution.
+
+\subsection{Transfer to withheld families and unfamiliar arrangements}
+
+A structural family here is a space-group type together with the anonymous species partition of occupied orbits, recorded by multiplicity and number of free coordinates. Withholding 24 families from model fitting and donor retrieval removed the exact occupied pattern of every one of their 228 target structures. A second panel withheld one composition from each of 96 represented families. An anonymous species-matching search found a matching training geometry for every member of this second panel. Its transfer test thus concerns chemistry on geometries represented at the matcher's tolerance.
+
+\begin{table}[tbp]\centering\small
+\caption{Five-draw scale-enabled recovery on transfer panels. The first two columns use the protected family split. The last two use an exploratory search for continuous-geometry analogues within the same anonymous occupation. Entries are target counts for the seed-11 fits chosen at the half- or full-traversal checkpoints.}
+\label{tab:gen-transfer}
+\begin{tabular}{lrrrr}\hline
+ & Withheld & Shared & Uncovered & Covered\\
+Generator & families (228) & families (96) & arrangements (25) & controls (96)\\\hline
+Symbolic prior & 46 & 60 & 1 & 34\\
+Angular, small & 49 & 70 & 1 & 41\\
+Contacts, small & 49 & 70 & 1 & 41\\
+Reciprocal, small & 49 & 69 & 1 & 41\\
+Contacts, medium & 49 & 70 & 1 & 41\\
+Orbit MeanFlow & 49 & 71 & 1 & 41\\\hline
+\end{tabular}
+\end{table}
+
+The small contact update added $1.32$ points (95\% family-bootstrap interval $0.00$ to $3.23$) on withheld families and $10.42$ points ($4.17$ to $16.67$) on shared families. At twenty draws each of the three small contact fits recovered 88 of 228 withheld-family targets against 69 for the prior ($+8.33$ points, $+4.61$ to $+12.90$). Independent symmetry detection at $0.01$~\AA{} assigned the reference group to 58 of the 70 best accepted five-draw proposals for the shared-family contact model. The corresponding count in the withheld families was zero of 49, also at $0.10$~\AA. At twenty draws two withheld-family targets had any accepted proposal with the reference group under the primary tolerance, both for the prior and each contact fit. None of the 20--21 additional targets recovered by individual contact fits had a correct-group match. Approximate recovery in this panel therefore gives little evidence that the refiner inferred the missing discrete occupation.
+
+We also searched 512 validation targets with a free positional coordinate and one to 64 training structures carrying their anonymous occupied pattern. A species-anonymous geometric comparison found a witness for 487 and exhausted the compatible training catalog for the remaining 25. The latter occupied 25 different patterns. Before scoring generated structures we fixed these 25 targets and the first 96 covered controls. The contact refiner and its initial structures recovered the same 0, 1 and 4 unfamiliar arrangements at one, five and twenty draws. On the covered controls, five-draw recovery rose from 34 to 41 ($+7.29$ points, $+2.91$ to $+12.63$ across occupied-pattern clusters). The 25-target sample only excludes discordance probabilities above 11.3\% at a one-sided 95\% level under independent target sampling.
+
+\subsection{Absolute cell geometry}
+
+The continuous update can alter the sites even when the chosen template stays fixed. On 1,920 draws from the first 96 official test targets, the medium contact model's median within-draw site displacement was $0.293$~\AA. The 95th percentile of the largest displacement per draw was $0.925$~\AA. These statistics use componentwise minimum wraps in the starting cell, which can differ from a shortest-image displacement in a skew cell. The error between the log spectra of the target and proposed unit-determinant reduced Gram matrices changed from 0.574 to 0.571. This statistic describes cell shape and need not distinguish inequivalent packings.
+
+The median log-volume change relative to each initial draw was $+0.069$ for contact drift and $-0.318$ for the matched orbit MeanFlow model, although both had median site motion of $0.293$~\AA. Across twelve first-traversal contact and angular fits, rescaling each updated cell to its own initial volume reduced the spread in five-draw physical-volume-qualified recovery from 2,307--3,758 to 4,293--4,299 targets. The intervention preserves fractional sites and unit-volume cell shape. Direct rematching of 480 angular development draws returned the same scale-enabled indicators before and after this operation.
+
+\subsection{Generating structures at empirical training compositions}
+
+In the generation experiment each draw first selects a training record uniformly and takes its exact unit-cell composition. This procedure preserves the empirical frequency of the compositions. It only assigns mass to compositions observed during training. Each of seven generators received the same ordered 10,000 formulas. Consequently, novelty in this experiment refers to the arrangement of a crystal at an observed composition.
+
+\begin{table}[tbp]\centering\small
+\caption{Outcomes among 10,000 raw crystals per method. Structural validity, joint chemical and structural validity, uniqueness and novelty each use all ordered attempts. VUN counts crystals that are jointly valid, unique and novel. COV-R and COV-P are fingerprint recall and precision in percent. Density distance $W_1$ is in g\,cm$^{-3}$.}
+\label{tab:gen-dn}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrrrr}\hline
+Generator & Struct. & Joint & Unique & Novel & VUN & COV-R & COV-P & $W_1$\\\hline
+Symbolic seed & 8,107 & 7,351 & 9,377 & 6,534 & 4,140 & 99.23 & 98.85 & 0.139\\
+Angular 0.2M & 8,882 & 8,055 & 9,302 & 6,023 & 4,360 & 99.48 & 98.96 & 0.512\\
+Contacts 0.2M & 8,883 & 8,056 & 9,302 & 6,023 & 4,359 & 99.47 & 99.01 & 0.317\\
+Angular 2M & 8,880 & 8,051 & 9,301 & 6,023 & 4,355 & 99.46 & 99.00 & 0.478\\
+Contacts 2M & 8,888 & 8,061 & 9,302 & 6,023 & 4,365 & 99.46 & 98.96 & 0.527\\
+Released angular & 9,492 & 8,594 & 9,895 & 9,724 & 8,249 & 68.37 & 99.80 & 0.534\\
+Released uFlowCSP & 9,506 & 8,584 & 9,300 & 5,555 & 4,505 & 99.24 & 99.87 & 0.142\\\hline
+\end{tabular}
+\end{table}
+
+A raw structure passed the geometric gate at volume $\geq0.1$~\AA$^3$ and shortest periodic separation $\geq0.5$~\AA{} for every pair of distinct sites. The SMACT composition screen \cite{smact} accepted 9,042 of the common formulas. We assessed uniqueness in draw order within reduced formula and assessed novelty against 26,614 eligible training structures using the species-preserving maximum-site fit. Contact refinement increased joint validity from 7,351 to 8,061 and reduced raw novelty from 6,534 to 6,023. Among the paired draws, the contact update gained 686 valid, unique and novel structures and lost 461, a net increase of 225 (2.25 percentage points, paired 95\% interval 1.57 to 2.91).
+
+For coverage, a crystal required a nearby CrystalNN structural fingerprint (distance $\leq0.4$) and a nearby standardized Magpie composition fingerprint (distance $\leq10$) \cite{cdvae,matminer}. The two nearest neighbors may differ. Recall averages over the 9,046 references and precision uses the 10,000 raw attempts as denominator. Density distances use a seeded draw of 1,000 jointly valid, fingerprinted proposals from each pool. The released angular generator had the largest raw novelty count yet covered only 68.37\% of the reference fingerprints. The medium contact model covered 99.46\%, but its density distribution lay farther from the reference than the symbolic seed's.
+
+\begin{figure}[tbp]
+\centering\includegraphics[width=.94\linewidth]{spacegroups.pdf}
+\caption{Space groups detected in raw crystal samples at $0.01$~\AA. The reference distributions use the MP-20 test structures and the training structures from which the empirical formulas were sampled. Each generated distribution includes all 10,000 proposals.}
+\label{fig:gen-spacegroups}
+\end{figure}
+
+The symbolic seed and medium contact update each produced 151 detected space-group types. Their Jensen--Shannon distances to the test distribution were 0.090 and 0.086 (square root of divergence in bits, with detection failure as a category). The small and medium angular and contact fits gave identical group assignments on all 10,000 paired draws, including 12 detection failures. Their assignments differed from the seed on 14 draws. For comparison, 9,965 released-angular and 9,765 released-uFlowCSP proposals had detected type $P1$ at the same tolerance. Across 256 prospectively selected draws, independent operation tests found the requested subgroup in 255 seed structures and in all 256 small angular and all 256 small contact outputs. The detected operations equalled the requested set in 254, 255 and 255 cases, respectively.
+
+\subsection{Relaxation and a restricted reference hull}
+
+Eight shared draw indices were selected by hash before examining energies. For each composition we relaxed the candidates and their competing phases using the same CHGNet potential \cite{chgnet}, cell and position degrees of freedom, zero-pressure FIRE optimizer, 100-step limit and $0.10$~eV/\AA{} force criterion. The resulting finite reference library contained 119 distinct competing phases across the eight compositions. It includes elemental terminals and the lowest deposited formation-energy phase per eligible reduced composition among entries within $0.10$~eV/atom of their deposited hull. The screen evaluated energies relative to the candidate-augmented restricted hull.
+
+\begin{table}[tbp]\centering\small
+\caption{Relaxation of eight paired draws per generator. All eight restricted hulls were available for every method. Energy counts draws that passed the restricted $0.10$~eV/atom threshold. Joint success additionally requires convergence, the covalent-contact test, novelty to the original training set and uniqueness within the relaxed panel.}
+\label{tab:gen-relax}
+\begin{tabular}{lrrr}\hline
+Raw generator & Converged & Energy & Joint\\\hline
+Symbolic seed & 6 & 5 & 1\\
+Angular 0.2M & 6 & 4 & 0\\
+Contacts 0.2M & 6 & 4 & 0\\
+Angular 2M & 6 & 4 & 0\\
+Contacts 2M & 6 & 4 & 0\\
+Released angular & 6 & 5 & 4\\
+Released uFlowCSP & 6 & 5 & 1\\\hline
+\end{tabular}
+\end{table}
+
+\input{gallery}
+
+The physical contact test required separations at least 0.60 times the sum of the two covalent radii. A passing energy could describe a known packing. Figure~\ref{fig:relax-crystals} illustrates this point. The SrPbS$_2$ contact-model candidate, for example, passed the energy threshold and matched training material \texttt{mp-1218019} after relaxation. The Mn$_2$Cr$_3$GaS$_8$ candidate converged 340~meV/atom above its restricted hull. At $0.01$~\AA{} the medium contact model's requested operation sets survived relaxation in all eight cases, compared with seven of eight for the medium angular model. Recovery of symmetry, relaxation convergence, and success on the joint screen therefore describe different physical properties. CHGNet was trained on Materials Project trajectories, and the finite competing-phase library limits the energy comparison. With zero joint successes in eight draws, the one-sided 95\% binomial upper bound under independent draws is 31.2\%. Larger independent panels and a comparable first-principles hull would be needed to estimate a stable, unique and novel yield.

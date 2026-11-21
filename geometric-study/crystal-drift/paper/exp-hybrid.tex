@@ -1,0 +1,11 @@
+\subsection{What does one retrieval draw add?}
+On previously inspected MP-20 targets, we paired the first training-template proposal with the first nineteen neural proposals, keeping the total at twenty. Before scoring an independent cohort, we fixed this allocation, the one-pass checkpoints, and the hash-selection rule. From Alexandria validation we selected 512 distinct reduced formulas absent from all MP-20 splits and from the earlier 128-target Alexandria cohort. Material IDs and embedded MP aliases were checked. Prototype sharing across formulas remains possible. Each target received the same composition, common retrieval draw and ordered neural noise across arms.
+
+\begin{inplace}{table}\centering\small
+\caption{Frozen one-template, nineteen-neural allocation. The first two columns give recovery as a percentage of all targets. The last two count Alexandria targets recovered exclusively by the hybrid or exclusively by twenty retrieval draws, expressed as percentages of all 512 targets averaged across seeds.}\label{t:hybrid}
+\begin{tabular}{lrrrr}\hline Method & MP-20 & Alexandria & Hybrid only & Retrieval only\\\hline
+1 retrieval + 19 CrytalDrift & 71.15 & 39.39 & 15.69 & 0.72 \\
+1 retrieval + 19 One-Euler flow & 68.63 & 35.09 & 11.52 & 0.85 \\
+1 retrieval + 19 16-step flow & 71.39 & 41.80 & 17.84 & 0.46 \\
+20 retrieval & 65.19 & 24.41 & -- & -- \\\hline\end{tabular}\end{inplace}
+On the independent cohort the drifting hybrid improved on twenty retrieval candidates by $+14.97$ points ($[12.24,17.90]$). Its paired differences from the one-Euler and sixteen-step hybrids were $+4.30$ points ($[2.60,6.12]$) and $-2.41$ points ($[-3.97,-0.85]$), respectively. The bootstrap resamples entire target IDs across the three fit seeds.

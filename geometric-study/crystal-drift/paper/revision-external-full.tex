@@ -1,0 +1,13 @@
+\paragraph{A published one-step predictor.}
+We replayed the released Cartesian uFlowCSP checkpoint \cite{uflow} on all 9,046 MP-20 test IDs. The 131.2-million-parameter network received the cell composition, null symmetry label and its original 100-token input. Each proposal used one FP32 network evaluation. The original 128-target, five-draw predictions were retained exactly. We applied the same matcher and native-volume test to every unrelaxed proposal.
+
+\begin{table}[!htbp]\centering\small
+\caption{Released uFlowCSP on the full MP-20 test split. MR, maximum-site recovery, and MR with native volume agreement are percentages. Best RMS is the mean of the best normalized RMS displacement over RMS-recovered targets.}\label{t:revision-external-full}
+\begin{tabular}{rrrrr}\hline
+Draws & MR & Max-site & MR + volume & Best RMS\\\hline
+1 & 46.32 & 38.99 & 45.43 & 0.089\\
+5 & 68.05 & 57.40 & 66.79 & 0.088\\
+20 & 79.32 & 67.78 & 78.07 & 0.085\\
+\hline\end{tabular}\end{table}
+
+Training-set retrieval led uFlowCSP by 15.54 points ($[14.46,16.62]$) in one-draw recovery. At five draws uFlowCSP led retrieval by 3.45 points ($[2.42,4.52]$) and CrytalDrift by 47.73 points ($[46.72,48.71]$). The intervals pair target IDs and condition on the three compact fits and one released checkpoint.

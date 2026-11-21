@@ -1,0 +1,45 @@
+\documentclass[10pt,letterpaper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,graphicx}
+\newcommand{\linkto}[2]{\leavevmode\pdfstartlink attr {/Border [0 0 0]} user {/Subtype /Link /A << /S /URI /URI (\pdfescapestring{\detokenize{#1}}) >>}#2\pdfendlink}
+\providecommand{\url}[1]{\linkto{#1}{{\small\ttfamily #1}}}
+\pdfinfo{/Title (CrytalDrift: One-shot generation of crystal structures) /Author (AmirM.MohammadHosseini)}
+\setlength{\textwidth}{6.42in}
+\setlength{\oddsidemargin}{.04in}
+\setlength{\textheight}{9.05in}
+\setlength{\topmargin}{-.53in}
+\setlength{\emergencystretch}{2.2em}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\renewcommand{\topfraction}{.90}
+\renewcommand{\bottomfraction}{.80}
+\renewcommand{\textfraction}{.09}
+\renewcommand{\floatpagefraction}{.64}
+\newcounter{crystaltheorem}
+\newcommand{\crystaltheorem}[3]{%
+  \par\addvspace{.7\baselineskip}\noindent
+  \fbox{\begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+    \refstepcounter{crystaltheorem}\label{#1}%
+    \textbf{Theorem \thecrystaltheorem\quad #2}\par\smallskip
+    #3\end{minipage}}%
+  \par\addvspace{.5\baselineskip}}
+\newtheorem{suppprop}{Proposition}[section]
+\raggedbottom
+\title{\textbf{CrytalDrift}\\[2pt]\Large One-shot generation of crystal structures}
+\author{AmirM.MohammadHosseini\\[2pt]\small Department of Biotechnology, University of Tehran}
+\date{}
+\begin{document}
+\maketitle
+\input{opening}
+\input{method-drift}
+\input{models}
+\input{experiments}
+\input{closing}
+\input{bibliography}
+\clearpage
+\appendix
+\input{proofs-drift}
+\input{model-details}
+\input{results-details}
+\input{generalization}
+\end{document}

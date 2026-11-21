@@ -1,0 +1,11 @@
+\begin{table}[!htbp]
+\centering\small
+\caption{Five-draw StructureMatcher recovery (\%) on 128 fixed full-chemistry targets per evaluation cohort. The first two columns use models fitted on the indicated dataset. The transfer columns use frozen MP-20 models and MP-20 donors. Alex denotes the formula-filtered Alexandria validation cohort. MP-20 fits average three seeds, WBM fits use one.}
+\begin{tabular}{lrrrr}\hline
+Method & MP-20 & WBM & MP-20 to WBM & MP-20 to Alex\\\hline
+CrytalDrift & 19.01 & 30.47 & 26.30 & 14.84\\
+One-step flow & 14.84 & 21.88 & 21.09 & 9.64\\
+16-step flow & 21.88 & 36.72 & 26.30 & 13.54\\
+Training-set retrieval & 68.49 & 88.28 & 54.69 & 28.13\\
+\hline\end{tabular}
+\end{table}

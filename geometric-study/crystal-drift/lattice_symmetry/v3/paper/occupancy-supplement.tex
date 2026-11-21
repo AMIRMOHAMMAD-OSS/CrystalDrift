@@ -1,0 +1,62 @@
+\section{Template coverage and independent structural checks}\label{app:occupancy-coverage}
+
+For every target, reproduce the protected training lookup using only its formula. At each
+ordered draw record the inferred group and the full element-labelled list of occupied
+Wyckoff letters. A literal match uses the canonical Hall setting. To recognize equivalent
+occupations under alternative settings, apply one simultaneous Wyckoff-letter permutation
+to the entire multiset of orbits. The tabulated alternative settings in PyXtal~1.0.9 \cite{pyxtal} supply
+878 distinct permutations across the 230 groups. Each group's list contains identity and is
+closed under composition. A recovered space-group number alone gives a less restrictive
+diagnostic. In 7 of 9,046 official structures the reference chart failed verification. These
+targets remain in every coverage denominator. At five draws 6,998 targets have the literal
+occupation on the shortlist, 7,469 have a setting-equivalent occupation and 7,705 have the
+reference group. Among the 45,230 proposed templates at this prefix, 6,331 have zero free
+positional parameters. The network can still change their compatible cell.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{template-coverage.pdf}
+\caption{Cumulative coverage of the train-only chemical shortlist. The left panel distinguishes
+three tests on the official split. The right uses a simultaneous setting-equivalent occupied
+pattern. The 228 excluded-family targets never receive their true operational family.
+The 25 uncovered validation arrangements have a represented anonymous symbolic pattern but
+no matched continuous structure among its protected training donors. Their pattern remains
+absent from the first 20 proposals for five targets.}\label{fig:template-coverage}
+\end{figure}
+
+The original shared-family panel holds out 96 chemical compositions in 96 represented
+families. To ask whether any of their geometries are unfamiliar at the matcher's resolution,
+compare each native challenge structure in that panel (drawn from the protected part of the
+official training partition) to the surviving training donors in its family under an anonymous
+species bijection. Pymatgen's \texttt{get\_rms\_anonymous} uses the same geometric tolerances
+and volume scaling as the main analysis. With donors ordered by a fixed hash, the search
+finds a witness for every target in 114 comparisons. This panel therefore measures chemical
+transfer within represented geometries at these tolerances.
+
+We subsequently registered a bounded validation search before applying any generator to its
+selected targets. Exclude 2,039 records identified in previous validation panels. For a
+verified primitive target with a free positional coordinate, require one to 64 training
+structures with the same group and anonymous species partition of occupied Wyckoff letters
+up to a simultaneous setting change. Rank the eligible 3,734 validation IDs by SHA-256 with
+a fixed salt and inspect the first 512. A witness establishes coverage. An uncovered case
+requires exhausting its entire compatible catalog. With 864 public matcher calls, 487 cases
+have a witness and 25 (25 distinct patterns) have none. Freeze the 25 uncovered cases and the
+first 96 covered controls before scoring their generated proposals. This definition concerns
+matches within the recorded occupancy catalog. Other symbolic patterns and other matcher
+tolerances can admit further geometric analogues.
+
+\paragraph{Numerical operation checks.}
+Primitive-cell reduction of all 1,731 conventional Wyckoff charts gives the expected
+multiplicities and free ranks. At two parameter choices per chart the largest bidirectional
+wrapped-coordinate residual against both the conventional images and complete native group
+orbit is \(8.9\times10^{-16}\). The native operation lists also agree with independently
+read spglib~2.5.0 Hall operations for every group \cite{spglib}. On 32 further hash-selected validation formulas,
+the zero-call prior and four frozen learned methods each generated one structure. At
+\(0.01\,\text{\AA}\) all 160 proposals contain the requested operations, have exactly that
+operation set, and return the same canonical Hall number and equivalent occupied pattern through
+PyXtal's public \texttt{from\_seed}. PyXtal assigns the canonical setting for the detected
+space-group type. The independent in-basis operation check establishes containment.
+Its \texttt{to\_pymatgen} returns conventional structures.
+The stock scale-enabled matcher accepts 149 of 160 native-to-conventional round trips in
+both directions. Independently reducing each member of the remaining 11 pairs with spglib
+recovers all 11 in both directions. This separate convention check leaves the headline
+proposal-first matching protocol unchanged.

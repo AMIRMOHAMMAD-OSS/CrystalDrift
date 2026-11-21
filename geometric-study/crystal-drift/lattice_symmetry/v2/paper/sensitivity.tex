@@ -1,0 +1,15 @@
+\section{Sensitivity to maximum site displacement and native volume}\label{app:csp-sensitivity}
+We rescore the ordered raw proposals under two stricter criteria on the same 9,046 official composition-conditioned targets. The maximum-site criterion uses the public \texttt{StructureMatcher.fit} acceptance under the prescribed primitive-cell reduction, volume scaling, exact species, lattice tolerance 0.3, site tolerance 0.5 and angle tolerance $10^\circ$. It requires an accepted mapping whose largest normalized displacement passes the site tolerance. The volume-qualified criterion requires the standard RMS match and $|\log(V_{\rm draw}/V_{\rm ref})|\leq\log(1.10)$ on the same draw, using the original cell volumes before matcher scaling. Their compositions, and hence site counts, are identical.
+\begin{table}[!htbp]\centering\scriptsize
+\caption{Raw recovery (\%) under stricter structure criteria. Differences are percentage points, with 95\% paired target-bootstrap intervals. Each target carries the same three training or prior seeds 11, 23 and 37 and up to twenty ordered draws.}\label{tab:csp-sensitivity}
+\setlength{\tabcolsep}{3.3pt}\begin{tabular}{lrrrrrr}\hline
+Criterion & $k$ & Prior & Radial & Angular & Angular $-$ prior & Angular $-$ radial\\\hline
+Maximum site & 1 & 1.86 & 2.58 & 2.68 & +0.82 [+0.70,+0.94] & +0.10 [+0.05,+0.15]\\
+ & 5 & 6.22 & 8.74 & 9.05 & +2.83 [+2.59,+3.07] & +0.31 [+0.22,+0.40]\\
+ & 20 & 13.47 & 17.39 & 17.81 & +4.34 [+4.05,+4.63] & +0.42 [+0.32,+0.52]\\
+Native volume & 1 & 2.61 & 3.28 & 2.79 & +0.18 [-0.02,+0.40] & -0.49 [-0.70,-0.27]\\
+ & 5 & 10.02 & 12.28 & 10.06 & +0.04 [-0.31,+0.41] & -2.22 [-2.56,-1.86]\\
+ & 20 & 21.15 & 24.60 & 21.24 & +0.08 [-0.31,+0.46] & -3.37 [-3.74,-2.98]\\
+\hline\end{tabular}\end{table}
+Across twenty raw draws per target and seed, the mean absolute log-volume errors for the prior, radial and angular maps were 0.116, 0.120, 0.164, respectively. The corresponding mean shape errors were 0.435, 0.435, 0.435. Shape error is the Euclidean distance between sorted eigenvalues of $\frac12\log(LL^\top)$ after subtraction of their mean, computed in each deposited basis. This removes uniform scale and Cartesian orientation. A general unimodular rebasing can change this diagnostic.
+On the first draw of every target and seed, the mean fractional motif RMS errors in the same order were 0.308, 0.297, 0.296. For this diagnostic we use the deposited basis, align a center of the rarest species, alternate same-species assignments with a common origin refinement for up to four rounds, and retain the best feasible displacement. Each displacement is wrapped componentwise. This diagnostic is dimensionless and depends on the basis and alignment search. It includes targets with no matcher hit. The archive records the individual-seed results, absolute intervals and paired intervals for all three geometry diagnostics.

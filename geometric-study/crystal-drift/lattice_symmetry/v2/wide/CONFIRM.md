@@ -1,0 +1,3 @@
+# Independent-seed validation confirmation
+
+Seed 11 met the initial paired validation criterion at 256 updates by 0.00331 in fair geometry score. Freeze the same fourfold traceless-strain factor, previously specified 128 validation IDs, five retained draws and 256 updates. Run seeds 23 and 37 and their matched narrow baselines. Report every seed and the paired target bootstrap on their mean differences, conditional on these fits. Assess whether the independent seeds reproduce the magnitude and direction. The sensitivity stays separate from early stopping and the locked full-test primary comparison.

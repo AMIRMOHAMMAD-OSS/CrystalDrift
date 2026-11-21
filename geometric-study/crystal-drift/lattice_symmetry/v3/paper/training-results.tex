@@ -1,0 +1,29 @@
+\paragraph{Equal training exposure.} Each protected primitive training ID contributes an anchor once per traversal. Positive and negative banks each contain two draws. The scheduled anchor supplies the first positive, and the second comes from the same composition. These banks are often sparse. Among the scheduled rows, 86.74\% have only one distinct observed structure at that exact composition. Training seed construction excludes all structures with the anchor's reduced chemistry from the donor search.
+
+The full first traversal of the small orbit model processes 26,419 distinct anchor structures and 274,066 anchor atoms in 1,652 optimizer updates. The global orbit networks contain 218,497 and 2,098,297 registered parameters. An embedding can count as trainable even when its element or orbit type is absent from the data. The evidence identifies each inactive input row and verifies its zero gradient. Replacing the field with a MeanFlow loss keeps these widths, the seed distribution and the decoder fixed. We report the original within-shard order and a second run with matching anchor order and a separate random stream for event times.
+
+The native uFlowCSP small and medium networks have 233,868 and 2,135,052 registered parameters. Their active counts after removing the disabled fine space-group branch are 219,084 and 2,098,092. The authors' full architecture has 131,215,116 parameters. The initial native training catalog has 26,614 rows. A second native fit uses exactly the 26,419 orbit-eligible rows and their order. The common anchors do not make the native objective, training-only symmetry labels or Gaussian input distribution identical to the orbit experiment.
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Development hits among 96 targets at four fixed training exposures, in traversals. The chosen checkpoint is the earliest development maximum. The independent confirmation panel also has 96 targets.}
+\begin{tabular}{lrrrrlr}\hline
+Generator & 0.5 & 1 & 4 & 8 & Chosen & Confirm.\\\hline
+Angular 0.2M & 63 & 63 & 62 & 62 & half & 50\\
+Angular 2M & 62 & 62 & 62 & 62 & half & 51\\
+Contact 2M & 63 & 63 & 62 & 62 & half & 50\\
+Orbit MeanFlow 2M & 63 & 63 & 61 & 63 & half & 51\\
+Native uFlow 0.2M & 13 & 16 & 18 & 23 & eight & 15\\
+Native uFlow 2M & 18 & 21 & 23 & 30 & eight & 26\\
+\hline\end{tabular}\end{table}
+
+All four orbit models selected the half-traversal checkpoint. Both reduced native uFlowCSP models selected eight traversals. More training improved native uFlowCSP development recovery; the longer orbit trajectories did not improve the earlier maximum. The matched parameter table reports this validation decision explicitly. A common allocated training budget and an identical deployed exposure are different comparisons.
+
+\begin{figure}[htbp]\centering\includegraphics[width=\linewidth]{learning-curves.pdf}\caption{Development recovery at the saved training exposures for the orbit generator. Each point counts targets recovered at five draws. The same disjoint confirmation panel scores the selected checkpoint of each run.}\label{fig:learn}\end{figure}
+
+\begin{figure}[htbp]\centering\includegraphics[width=\linewidth]{uflow-learning.pdf}\caption{Native uFlowCSP development recovery as capacity and exposure increase. These fits start from the authors' 100-token Gaussian prior. Each marker represents an actual EMA checkpoint.}\label{fig:ufit}\end{figure}
+
+\begin{figure}[htbp]\centering\includegraphics[width=\linewidth]{capacity-cost.pdf}\caption{Recovery against instantiated parameter count on the official split and against measured batch-one GPU latency on the timed subset. Markers describe the trained models and their native priors. The released 131M comparator has its original training history.}\label{fig:capacity}\end{figure}
+
+The 15,011,747-parameter angular network used the same 26,419 anchors and 1,652 updates in its full traversal as the smaller angular networks. Both checkpoint looks recovered 62 of 96 development targets. The selected half-traversal weights recovered 50 of 96 on confirmation and 5,173 of 9,046 at five draws on the public test set.
+
+The 135,992,027-parameter contact model trained on the same anchors at microbatch two. A traversal required 13,210 optimizer updates. The fit clock recorded 72.3 minutes on the laptop GPU. Elapsed time from the capacity check to the final optimizer checkpoint was 81.9 minutes, including a restart, validation generation and file writes. At five draws the selected 136M and 2M checkpoints each recovered 5,173 targets. With native-volume agreement, the counts were 1,648 and 3,481, respectively. The difference in optimizer-step counts limits a capacity-only interpretation.

@@ -1,0 +1,19 @@
+\begin{inplace}{table}
+\centering\small
+\caption{Percentage of held-out structures recovered within one or five unranked proposals. Two-site tests use all 189 targets. The 2--8 site test uses 128 targets selected by ID. Local values average three seeds. The released uFlowCSP checkpoint uses one sampling seed and a larger training corpus.}
+\label{tab:recovery}
+\begin{tabular}{lrrrr}
+\hline
+&\multicolumn{2}{c}{Two-site} &\multicolumn{2}{c}{2--8 sites}\\
+Method & @1 & @5 & @1 & @5\\
+\hline
+Pooled drifting &27.34&76.19&13.28&34.64\\
+Exact-composition drifting &46.56&82.01&13.28&43.75\\
+Flow, one step &47.44&73.37&16.67&47.66\\
+Flow, four steps &50.97&82.72&---&---\\
+Flow, 16 steps &47.80&83.42&19.01&50.78\\
+Training-set retrieval &67.55&76.01&48.44&57.55\\
+Released uFlowCSP, one step &83.07&92.06&\uflowone&\uflowfive\\
+\hline
+\end{tabular}
+\end{inplace}

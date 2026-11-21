@@ -1,0 +1,76 @@
+\section{Crystal structure prediction on MP-20}\label{sec:csp-exp}
+
+We evaluated two ways to generate structures from an exact unit-cell composition. The site generator starts from a sampled lattice with uniformly distributed sites. The orbit generator starts from a pattern inferred from training structures. In both experiments we saved the initial crystals so that each generator could be compared with the structures it actually received. Reference coordinates, lattice parameters, and space groups were withheld during prediction.
+
+\paragraph{Training and evaluation.}
+The public MP-20 test partition contains 9,046 structures~\cite{materialsproject,cdvae}. Earlier versions of the project had already used it. We therefore also withheld 24 complete structural families (228 structures) and 96 compositions from families that remained in training. We removed every challenge composition from the training and retrieval catalogs at the level of the reduced formula. Of 26,614 eligible training records, 26,419 had verified primitive-cell orbit charts and entered the orbit-model fits. During training, each anchor's reduced formula was also excluded from its own seed lookup. We used separate 96-structure panels for checkpoint selection and confirmation. All methods were scored on their raw, unrelaxed proposals.
+
+For the orbit model, our primary endpoint was the fraction of targets recovered in five draws, with a prespecified three-percentage-point improvement over the identical seeds as the engineering target. The matcher allows a common rescaling of the cells and compares atoms of the same species. A second endpoint requires one and the same proposal to pass this match and to have a volume between $V_\mathrm{ref}/1.10$ and $1.10V_\mathrm{ref}$. We also recorded the best normalized RMS displacement for each recovered target. Failed draws remain in the recovery denominator. Appendix~\ref{sec:csp-details} gives the matching and uncertainty calculations.
+
+\subsection{One-step and iterative sampling from the same prior}
+
+We first compared the site generator trained with angular drift against a compact flow that takes sixteen steps from the same stochastic prior. When both methods could make twenty proposals for each of the 9,046 test targets, the flow recovered 33.56\% and the site generator 31.79\%, averaged over three training seeds. The paired difference was \(-1.78\) percentage points (95\% interval \(-2.14\) to \(-1.41\)). This comparison favors the flow when each method gets the same number of attempts.
+
+We then timed the two samplers on the same 128 targets, allowing each method to make up to twenty consecutive attempts per target. We alternated method order across targets and counted only proposals returned to the host by the deadline. The site generator took 10.53\,ms to return its first proposal at the median, compared with 43.57\,ms for the flow. At 100\,ms it had completed an average of 8.47 attempts per target, compared with 1.75 for the flow. The additional attempts changed which sampler recovered more structures (Table~\ref{tab:site-time}).
+
+\begin{table}[htbp]
+\centering\small
+\caption{Recovery within 100\,ms on 128 MP-20 compositions. The two learned samplers ran on an RTX 3060 Laptop GPU. The fitted prior runs on the host and uses no network evaluations. All three methods start with the same sequence of sampled cells and sites. Timing ends with decoded host arrays and excludes structure matching and relaxation.}
+\label{tab:site-time}
+\begin{tabular}{lrrr}\hline
+Sampler & First proposal (ms) & Mean completed draws & Targets recovered\\\hline
+Fitted site prior & 0.21 & 20.00 & 39/128\\
+Angular site generator & 10.53 & 8.47 & 32/128\\
+16-step flow & 43.57 & 1.75 & 13/128\\\hline
+\end{tabular}
+\end{table}
+
+Relative to the flow, the one-step generator gained 14.84 percentage points of recovery at the deadline (paired 95\% interval 8.59 to 21.09). The zero-call prior completed all twenty attempts and had the highest observed recovery. Thus the time advantage over iterative sampling is measurable, while the cost of even one learned update can matter on a short deadline.
+
+\subsection{What does the choice of field change?}
+
+We first trained a separate 218,497-parameter orbit generator for each of eight descriptor--affinity combinations. The models shared their initialization, training anchors, positive and negative bank draws, starting structures and optimizer schedule. After a full traversal of the training set, angular drift, angular drift with inter-orbit contacts, and angular drift with reciprocal intensities each recovered exactly the same 63 development structures out of 96. Returning the original seeds recovered 59. The contact model passed the volume requirement for 45 targets, compared with 42 for both angular and reciprocal drift and 47 for the seeds. Changing the angular affinity from Laplace to Gaussian gave 62 scale-enabled matches. Across the eight fits, the spread in recovery was three targets (Figure~\ref{fig:e-kernels}). On the separate confirmation panel, the selected pair-distance fit recovered 53 targets and the selected angular, contact and reciprocal fits recovered 50 each. The apparent order in development did not persist. Table~\ref{tab:kernel-all} gives both panels and the selected exposures for every fit.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=.90\linewidth]{kernel-screen.pdf}
+\caption{Five-draw recovery on the 96 development structures after one training traversal. Pairing the targets across fits separates gains over the common seed from gains over angular drift. Intervals resample complete targets.}\label{fig:e-kernels}
+\end{figure}
+
+\subsection{How much recovery comes from the seed?}
+
+On the public test set, the selected 2M-parameter contact update recovered 5,173 of 9,046 targets, compared with 4,795 for its identical seeds. Of these targets, 445 gained a match and 67 lost their only match. The paired change was therefore $+4.18$ percentage points (95\% interval $+3.69$ to $+4.67$). Ordinary angular drift recovered 5,171 targets. Adding contacts changed recovery by $+0.02$ points ($-0.04$ to $+0.10$). Across three independent training seeds, the contact-minus-angular contrast at this capacity was $+0.01$ points ($-0.03$ to $+0.04$). Most of the gain over the seeds was therefore already present with angular drift (Figure~\ref{fig:increments}).
+
+\begin{table}[tbp]\centering\small
+\caption{Prediction from the exact unit-cell composition on 9,046 public MP-20 targets. MR gives the percentage recovered within the first $k$ proposals. Native@5 adds the same-draw volume requirement. RMS@5 averages the best dimensionless displacement among targets recovered by that method. A draw uses one neural evaluation for each learned row and zero for the first and last rows.}\label{tab:main}
+\begin{tabular}{lrrrrr}\hline
+Method & MR@1 & MR@5 & MR@20 & Native@5 & RMS@5\\\hline
+Symbolic seed & 36.80 & 53.01 & 62.02 & 43.89 & .193\\
+Angular drift, 2M & 40.58 & 57.16 & 66.55 & 39.12 & .173\\
+Contact drift, 2M & 40.63 & 57.19 & 66.56 & 38.48 & .173\\
+Orbit MeanFlow, 2M & 40.43 & 56.90 & 66.32 & 2.09 & .172\\
+Released uFlowCSP & 46.32 & 68.05 & 79.32 & 66.79 & .088\\
+Full training geometry & 71.09 & 86.07 & 90.10 & 82.08 & .031\\\hline
+\end{tabular}
+\end{table}
+
+Volume changes the interpretation. The contact model passed the same-draw volume criterion for 3,481 targets, compared with 3,970 for its seeds, a change of $-5.41$ points ($-6.25$ to $-4.53$). When we retained the model's predicted fractional sites and shape but rescaled its cell to the starting volume, 4,296 targets passed. Thus the starting volume alone recovers much of what was lost. For the 5,109 targets with nine or more sites, scale-enabled recovery improved by $+5.66$ points ($+5.01$ to $+6.34$). The larger-cell gain therefore concerns the packing under the scale-enabled criterion.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=.88\linewidth]{increments.pdf}
+\caption{Paired five-draw recovery gains over the identical symbolic seeds. Confidence intervals retain the pairing between each target's starting structures and its refined proposals.}\label{fig:increments}
+\end{figure}
+
+We next compared the training objective and the starting geometry. A 2M MeanFlow network with the same orbit backbone and symbolic starting geometry reached 56.90\% at five draws. The released 131M-parameter uFlowCSP, which starts from Gaussian noise, reached 68.05\%. Its advantage over the contact model was 10.87 points (95\% interval 9.77 to 11.92). On the 4,469 targets that both recovered, their respective mean best normalized displacements were .056 and .157. Transferring an entire cell and its sites from a chemically selected training prototype gave the highest recovery, 86.07\%. After removing 90 targets with a close training match, that pipeline still recovered 7,705 of the remaining 8,956. Its input includes a donor's continuous geometry. The symbolic seed draws fresh continuous coordinates.
+
+\subsection{Sampling time and recovery at a deadline}
+
+A one-call model with a lower per-draw cost can spend the saved time on additional proposals. Whether that raises recovery depends on how many of those proposals match. We therefore measured both quantities on the same RTX 3060 Laptop GPU. Generating 10,000 proposals in batches of 32 took 17.87\,s with the 2M contact model and 36.81\,s with released uFlowCSP, a $2.06\times$ throughput ratio. The corresponding median times to a first proposal were 9.22 and 17.56\,ms on the GPU, and 5.64 and 280.86\,ms on one CPU thread. Both generators use one neural evaluation per candidate. These times include the template lookup where applicable, the full forward pass and materialization of the output on the host.
+
+Figure~\ref{fig:operating-points} shows the separate timing experiment for the orbit models. At a budget of 100\,ms per target on 64 common formulas, the contact model completed 720 proposals and recovered 34 targets. Released uFlowCSP completed 305 and recovered 37. The paired difference was $-4.69$ points (95\% interval $-17.19$ to $+7.81$). Geometry retrieval recovered 55 targets at that deadline. The extra proposals afforded by the smaller network did not close the observed accuracy gap at this operating point. The benchmark measures sampling to a decoded structure. Evaluating a structure or relaxing it incurs further cost.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=.92\linewidth]{operating-points.pdf}
+\caption{Recovery with a fixed proposal count and with a fixed elapsed-time budget. Only completed draws enter the timed comparison on the 64 common formulas. Each method could complete at most 20 draws per target.}\label{fig:operating-points}
+\end{figure}
+
+The distinction between a recovered packing and a recovered symmetry is especially important away from known families. The small contact fit recovered 49 of 228 withheld-family structures at five draws, against 46 for its seeds. None of its 49 best accepted proposals had the detected reference space group at either of the two tested tolerances. In a separate sampling experiment at 10,000 compositions drawn from the training distribution, the 2M contact model produced 4,365 valid, unique and novel raw structures, compared with 4,140 for the seeds and 4,505 for released uFlowCSP. The eight-case relaxation screen gave the contact model zero joint successes. Its sample size and restricted set of competing phases limit conclusions about stability.

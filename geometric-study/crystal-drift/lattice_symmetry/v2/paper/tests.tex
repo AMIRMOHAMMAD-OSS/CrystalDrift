@@ -1,0 +1,94 @@
+\section{What the field distinguishes}\label{sec:v2checks}
+\begin{figure}[!htbp]\centering
+\includegraphics[width=\linewidth]{equivalence.pdf}
+\caption{A shear changes the drawn unit cell while preserving its periodic lattice.
+In the two four-site motifs the six unordered pairwise distances agree exactly.
+The two shortest edges have different incidence. The power spectra are computed on
+the physical four-site cells using the listed motif coordinates. These are deterministic
+mathematical examples.}\label{fig:v2-witness}
+\end{figure}
+Place identical atoms at vertices $\{0,1,4,6\}$ or $\{0,1,3,7\}$ of a regular
+12-gon of radius 1~\AA\ in a 16~\AA\ cubic cell. Set $r_c=2.25$~\AA.
+The pairwise separations are the six chords $2\sin(k\pi/12)$, $k=1,\ldots,6$,
+once each in either motif. Only the second motif has its two shortest edges incident
+to a common vertex. Any distance-preserving labelling must preserve that incidence,
+so the motifs are inequivalent. Their radial blocks agree to $1.6\times10^{-16}$.
+The unscaled Euclidean differences for orders zero, one and two are respectively
+$0.31544$, $0.06769$ and $0.00617$. Even order zero detects the difference because
+multiplication before pooling preserves correlations between shells incident to
+the same center. Directional harmonics are sufficient for this example but unnecessary
+for its separation. In the fixed-basis release's decorated eight-site witness, we
+used its unit cell, coordinates and species with $r_c=4$~\AA. Radial shells agreed
+within $8.6\times10^{-13}$ and the three power blocks differed by $0.00246$,
+$0.01381$ and $0.00647$. A model can distinguish these examples in feature space
+without learning how to place their atoms.
+
+Two simple degeneracies survive the full descriptor. In a 24~\AA\ cubic cell, a
+two-species motif with sites 6~\AA\ apart and one with sites 9~\AA\ apart have empty
+neighborhoods at the 3.4~\AA\ test cutoff. Every block agrees. A four-element
+tetrahedron and its reflected image have opposite signed volumes under a fixed ordering
+of the species and identical descriptors. Their six labelled edges fit inside a region
+smaller than half a lattice period. No wrap ambiguity can restore the sign by a proper
+rigid motion. These examples rule out injectivity.
+
+\paragraph{Numerical checks.}
+We drew independent integer shears, determinant signs, orthogonal frames, origins,
+wraps and site orders for a batch comprising three differentiable query seeds,
+three positive references and three independent negative seeds. With FP64 arithmetic
+the maximum changes in the feature vector, field and parameter gradient were respectively
+$2.2\times10^{-14}$, $1.6\times10^{-14}$ and $5.3\times10^{-14}$.
+The maximum physical site discrepancy was $1.3\times10^{-14}$~\AA.
+The finite-batch field had norm $1.69$ and swapping the banks reversed it to
+$1.9\times10^{-16}$ precision. The integer-edge code agreed with direct exhaustive
+enumeration in the unsheared physical cell to $1.4\times10^{-14}$~\AA\ after transformation.
+A second implementation contracted Legendre polynomials directly over all ordered
+pairs of edges incident to a center. Its maximum difference from the harmonic calculation
+was $2.3\times10^{-15}$. A directional derivative of the descriptor differed from a
+central finite difference by $6.9\times10^{-11}$. Tests include nonzero self-images,
+distinct coincident atoms, interior padding, mixed sizes, a singleton, empty neighborhoods,
+smooth cutoff crossing, single-record positive caching, and controls changing one length,
+angle or species. The pinned CUDA FP32 run with TF32 disabled differed from the CPU by
+at most $1.5\times10^{-6}$ in features and $2.7\times10^{-6}$ in parameter gradients.
+We restored all nine validation-selected periodic checkpoints across the three feature
+arms and three seeds. For each, 96 independently transformed synthetic input crystals
+were arranged into the actual eight four-query training blocks with that arm's fitted
+scales and descriptor. The field, parameter gradient, unwrapped Cartesian shift, strain
+and transformed outputs agreed to $4.1\times10^{-14}$ in FP64.
+
+\paragraph{Reach of one bounded update.}
+The normalized edge weights sum to less than one at each center. Since
+$\|d/r_c\|<1$, the sum of the singular values of $B$ is at most one.
+Thus $|\log(V_{\rm out}/V)|=|\operatorname{tr}E|\le1$ and the change in log
+singular-value aspect ratio of the cell is at most $1/4$. For site $i$ the uncentered
+move is bounded by $b_i=\sum_{e:i}w_e\|d_e\|$. A relative move of two sites in the
+seed cell is bounded by $b_i+b_j$. On 2,048 random MP-20 \emph{training} targets, we
+compared one independent shape/volume/site prior draw to its supplied native target.
+The original prototype seed exceeded the necessary volume and aspect bounds on 120
+and 1,112 cases. For the fitted physical prior these counts were 1 and 1,276.
+For the 546 cells with at least two uniquely labelled species, a lower bound on the
+required relative shift exceeded $b_i+b_j$ on 108 original seeds and 78 fitted seeds.
+We used the wrapped fractional displacement multiplied by the smallest seed-cell
+singular value as the lower bound. These tests concern a single fixed seed and native
+representative per target. The evaluation matcher can rescale and rebase, and another
+draw can start nearer a target.
+
+In a separate validation sensitivity, we multiplied only the traceless part of $E$
+by four. With $A=L^{-1}L_{\rm out}$ the widened output is
+$L_{\rm out}(\det(A)^{-1/3}A)^3$, which keeps the volume change and site update of the
+same parameters. Conjugation still commutes with this map. At 256 updates, the wide
+minus original validation geometry-score differences were $-0.00331$, $-0.00451$
+and $-0.00227$ at seeds 11, 23 and 37. The first seed motivated confirmation with
+the remaining two. Their mean improvement was $0.00339$ (paired 95\% target bootstrap
+$[0.00129,0.00590]$ on the same 128 validation targets). This modest change in a geometric
+score has no measured full-test recovery counterpart. The primary benchmark keeps the
+declared head.
+
+\paragraph{Cost of the training representation.}
+On one CPU thread, for a fixed FP32 batch of 32 training structures, the median of
+23 warmed calls was 2.33~ms to enumerate indices and construct edge vectors, and
+8.29~ms for a complete forward generator evaluation including its own neighbors.
+Feature construction alone took 4.10~ms with pair shells and 7.81~ms with all powers.
+The complete generator, descriptor and backward pass took 21.72 and 32.03~ms, respectively.
+Summing the storage sizes seen by autograd's saved-tensor hook, with repeated storages
+counted on each save, gave 6.05 and 9.11~MB, respectively. Process peak memory and
+end-to-end proposal latency are measured separately in the benchmark.

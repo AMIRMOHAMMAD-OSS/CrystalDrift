@@ -1,0 +1,27 @@
+\section{What the two clocks include}
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Warm first-candidate latency in milliseconds for 64 common compositions with one host thread. Throughput uses the fixed 10,000 formulas, with batches of 32, and reports additional peak GPU tensor allocation beyond all resident loaded weights. Time includes deterministic template search and decoded CPU arrays. It excludes file writing, matching, scoring and relaxation.}
+\begin{tabular}{lrrrrrr}\hline
+Method & CPU p50 & CPU p95 & GPU p50 & GPU p95 & draws/s & MiB\\\hline
+Zero-call prior & 1.05 & 2.71 & 0.98 & 3.82 & 959.2 & 0.0\\
+Training geometry & 1.12 & 2.67 & 0.94 & 3.08 & 912.5 & 0.0\\
+Angular 0.2M & 4.19 & 5.75 & 8.62 & 16.10 & 558.8 & 4.8\\
+Angular 2M & 5.74 & 7.29 & 8.93 & 16.78 & 533.6 & 6.7\\
+Contact 2M & 5.64 & 7.94 & 9.22 & 16.63 & 559.5 & 6.7\\
+Orbit MeanFlow 2M & 5.60 & 7.48 & 8.94 & 13.73 & 520.7 & 6.7\\
+Native uFlow 0.2M & 5.02 & 6.38 & 9.14 & 15.62 & 2378.1 & 16.6\\
+Native uFlow 2M & 11.23 & 13.66 & 10.76 & 15.38 & 1894.5 & 35.5\\
+Released uFlowCSP & 280.86 & 307.72 & 17.56 & 26.40 & 271.7 & 115.9\\
+\hline\end{tabular}\end{table}
+
+The common train-only template index took 6.02 seconds to instantiate for the GPU clock. For the serial comparison we reset the shortlist cache at the beginning of each material, start the clock, and record synchronized elapsed time after each completed proposal. The random interleaving order is retained. The 20-draw cap applies equally to all methods and time budgets. No partial proposal is scored. In the repeated 10,000-composition workload, the sampler resets template lookup for each formula, and the final partial batch contains 16 structures. A one-call method invokes the network 313 times when tensor batches cover all 10,000 structures.
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Independent one-thread CPU timing of building and ranking one shortlist on the same 64 formulas. Each rule examines the same candidates. The ranked lists had a median of 20 entries. The learned ranker made 64 recorded forward calls in the measured episodes.}
+\begin{tabular}{lrr}\hline
+Ranking rule & p50 (ms) & p95 (ms)\\\hline
+lookup & 0.33 & 1.65\\
+frequency & 3.34 & 4.71\\
+learned & 3.58 & 5.28\\
+\hline\end{tabular}\end{table}

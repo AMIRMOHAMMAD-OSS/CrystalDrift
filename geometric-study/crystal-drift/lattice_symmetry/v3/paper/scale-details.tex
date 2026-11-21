@@ -1,0 +1,74 @@
+\section{Scale, exposure and numerical boundaries}
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Actual completed fits on one RTX 3060 Laptop GPU. Minutes are observed fit-receipt wall times. First-traversal rows and eight-traversal rows refer to their own independently labeled budgets. Concurrent host scoring and bank preparation can affect these training times. Confirmation is the selected checkpoint's five-draw count out of 96. Peak memory is allocated device tensor memory.}
+\begin{tabular}{lrrrrrr}\hline
+Generator & Parameters & Updates & Anchors & Minutes & Peak MiB & Confirm.\\\hline
+Released graph, refit & 6,723 & 1,652 & 26,419 & 2.2 & 43 & 50\\
+Widened released graph & 218,883 & 1,652 & 26,419 & 3.5 & 149 & 52\\
+Orbit model, local messages & 179,509 & 1,652 & 26,419 & 2.8 & 51 & 50\\
+Training-only system label & 218,497 & 1,652 & 26,419 & 2.8 & 50 & 50\\
+Orbit angular 0.2M & 218,497 & 1,652 & 26,419 & 2.0 & 50 & 50\\
+Orbit angular 2M & 2,098,297 & 1,652 & 26,419 & 2.8 & 111 & 51\\
+Orbit angular 15M & 15,011,747 & 1,652 & 26,419 & 9.5 & 406 & 50\\
+Four radial shells & 218,497 & 1,652 & 26,419 & 9.9 & 53 & 50\\
+Orbit angular 0.2M, long & 218,497 & 13,216 & 211,352 & 13.8 & 54 & 50\\
+Orbit angular 2M, long & 2,098,297 & 13,216 & 211,352 & 14.1 & 121 & 51\\
+Orbit contact 2M, long & 2,098,297 & 13,216 & 211,352 & 16.2 & 124 & 50\\
+Orbit MeanFlow 2M, long & 2,098,297 & 13,216 & 211,352 & 28.1 & 145 & 51\\
+Reference-size contacts & 135,992,027 & 13,210 & 26,419 & 72.3 & 2631 & 50\\
+Native uFlow 0.2M, long & 233,868 & 6,656 & 212,912 & 8.3 & 161 & 15\\
+Native uFlow 2M, long & 2,135,052 & 6,656 & 212,912 & 12.6 & 671 & 26\\
+\hline\end{tabular}\end{table}
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Best five-draw development recovery out of 96 targets among saved checkpoints completed by each elapsed training budget. A dash means no registered checkpoint was available by that deadline. Time is measured on the same RTX 3060 Laptop GPU and includes the fit up to that checkpoint. It excludes the separate reference-bank construction and the cost of retrospective matching. Repeated counts can denote the same selected weights.}
+\begin{tabular}{lrrr}\hline
+Model & 120 s & 240 s & 960 s\\\hline
+Angular drift 0.2M & 63 & 63 & 63\\
+Contact drift 0.2M & 62 & 63 & 63\\
+Orbit MeanFlow 0.2M & -- & 64 & 64\\
+Native uFlowCSP 0.2M & 16 & 16 & 23\\
+Angular drift 2M & 62 & 62 & 62\\
+Contact drift 2M & 63 & 63 & 63\\
+Orbit MeanFlow 2M & -- & -- & 63\\
+Native uFlowCSP 2M & 21 & 21 & 30\\
+\hline\end{tabular}\end{table}
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Frozen architectural controls on all 9,046 MP-20 targets. Each difference subtracts the same supplied symbolic starting structures. System supervision is a seven-way training-only loss. Counts are paired by target and proposal prefix.}
+\begin{tabular}{lrrrrr}\hline
+Generator & Hits@5 & $\Delta$ pp & 95\% interval & Native@5 & Hits@20\\\hline
+Released graph, refit & 5145 & +3.87 & [+3.39, +4.33] & 3173 & 5999\\
+Widened released graph & 5202 & +4.50 & [+4.01, +4.99] & 3385 & 6047\\
+Local orbit backbone & 5175 & +4.20 & [+3.70, +4.69] & 3380 & 6020\\
+Global orbit, 0.2M & 5176 & +4.21 & [+3.73, +4.70] & 3420 & 6022\\
+Global orbit, system supervision & 5177 & +4.22 & [+3.73, +4.71] & 3507 & 6017\\
+Global orbit, four radial shells & 5175 & +4.20 & [+3.70, +4.69] & 3478 & 6021\\
+Global orbit, 2M & 5171 & +4.16 & [+3.66, +4.64] & 3539 & 6020\\
+Global orbit, 15M & 5173 & +4.18 & [+3.68, +4.67] & 3467 & 6020\\
+Reference-scale orbit model & 5173 & +4.18 & [+3.68, +4.67] & 1648 & 6023\\
+\hline\end{tabular}\end{table}
+
+A direct small-model replay exposed a boundary of the matcher. For material \texttt{mp-8584}, draw 2, the public matcher accepted the archived CUDA coordinates with normalized RMS displacement 0.445342 and returned no match for a regenerated CPU realization. The maximum perturbations over the 480 development proposals were $3.82\times10^{-6}$~\AA{} in the cell and $1.20\times10^{-7}$ in fractional coordinates. One flag changed and all native-volume-qualified target counts agreed. A CUDA replay using a cached-input shortcut also changed this decision. The production validation path retained its original seed construction and its archived arrays. The release identifies the device on which each output was produced.
+
+The first orbit MeanFlow experiment used the same anchor set as drift but also drew event times from the within-shard shuffle generator. Only 328 of 26,419 ordered positions agreed with angular drift. The strict control draws times from a separate seed stream. Its complete ordered anchor sequence agrees with drift at every position. This distinction affects comparisons of training trajectories even when total exposure and distinct IDs agree.
+
+\paragraph{Earlier datasets and controls.} The preceding fixed-basis study includes a 128-target binary MP-20 cohort, a separate full-test replay, Wang--Botti--Marques structures from the Matbench Discovery release \cite{wbm,matbench}, and an Alexandria allocation from the Alex-MP-20 release \cite{mattergen} with reduced-formula exclusions. For WBM, a new reduced-formula split of 256,259 relaxed cells gives 205,091 training, 25,117 validation and 26,051 test entries. Seeds 11, 23 and 37 were evaluated on the archived 128-target WBM test cohort. Those archived experiments use the models and splits of that release. The periodic models developed here have new protected donors and primitive-orbit eligibility. Their official MP-20 denominator is 9,046. The source bundle identifies the checksums and independent reconstruction commands for both earlier releases.
+
+\paragraph{Training-only crystal-system label.} In the small angular control an auxiliary linear head predicts one of seven crystal systems from the multiplicity-weighted mean orbit embedding. We add $0.1$ times the cross-entropy for the two active generated draws with the labels of their registered same-formula positive partners. The $7\times 114$ weights and seven biases add 805 training-only parameters. Generation discards the classifier and receives the same formula and symbolic seed as ordinary angular drift.
+
+On the 128 WBM targets, five draws recovered 39/40/37 targets for fixed-basis drift, 28/35/27 for one Euler step, 47/47/39 for 16 Euler steps and 113/115/115 for training retrieval (seeds 11/23/37). The drift-minus-16-step difference was -4.43 percentage points (95\% interval -8.59 to 0.00), averaging the three paired outcomes per target before resampling targets.
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Fixed-basis precursor on the 128 hash-selected, two-to-eight-site binary MP-20 targets. MR is a percentage. RMS is the mean best normalized displacement over matched targets. The four compact or retrieval rows average seeds 11, 23 and 37 on identical targets. The released uFlowCSP row uses its full-chemistry weights and sampling seed 2026. The number of evaluations per target is $kS$.}\label{tab:historical-binary}
+\begin{tabular}{lrrrrrrr}\hline
+Historical pipeline & $S$ & MR@1 & MR@5 & MR@20 & RMS@1 & RMS@5 & RMS@20\\\hline
+Fixed-basis CrytalDrift & 1 & 13.28 & 43.75 & 74.74 & 0.348 & 0.351 & 0.335\\
+Flow, one Euler step & 1 & 16.67 & 47.66 & 71.09 & 0.365 & 0.360 & 0.336\\
+Flow, 16 Euler steps & 16 & 19.01 & 50.78 & 79.43 & 0.367 & 0.347 & 0.311\\
+Training retrieval & 0 & 48.44 & 57.55 & 57.81 & 0.011 & 0.013 & 0.012\\
+Released uFlowCSP & 1 & 53.12 & 80.47 & 89.84 & 0.088 & 0.054 & 0.062\\
+\hline\end{tabular}\end{table}
+
+The compact binary fits used 3,630 training cells. One Euler step diagnoses the discretization of the compact flow at the one-call budget. Table~\ref{tab:historical-binary} uses the ordered material identifiers in \texttt{revision/binary/target-crosswalk.csv} and reconstructs each endpoint from its 128-by-20 matrix of public matcher displacements. This cohort and these fixed-basis weights are separate from the full-chemistry orbit fits.

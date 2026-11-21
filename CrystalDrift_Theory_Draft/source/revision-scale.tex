@@ -1,0 +1,33 @@
+\subsection{Full MP-20 recovery and repeated WBM fits}\label{s:revision-scale}
+We evaluated the frozen full-chemistry generators and training-geometry retrieval on all 9,046 structures in the public MP-20 test split. For each of the three original seeds, all four methods received the same atomic numbers and multiplicities. The neural models shared their initial noise. The first five proposals for the original 128 hash-selected targets were preserved exactly. For every target and draw we recorded the normalized RMS criterion from \texttt{get\_rms\_dist}, the maximum-site criterion from \texttt{fit}, and the native generated-to-reference volume ratio. The volume sensitivity accepts an RMS-matched draw only when this ratio lies between $1/1.10$ and $1.10$. Both pymatgen matchers use the original lattice and site tolerances, primitive reduction, and isotropic rescaling.
+
+\begin{table}[!htbp]\centering\small
+\caption{Original one-pass compact fits on all 9,046 public MP-20 test structures. MR is the percentage of targets with at least one RMS match. Best RMS is the minimum normalized displacement among matches, averaged over recovered targets within each fitted seed, then equally across the three seeds. Each method can recover a different subset.}\label{t:full-mp20-revision}
+\begin{tabular}{lrrrrrr}\hline
+Method & MR@1 & MR@5 & MR@20 & RMS@1 & RMS@5 & RMS@20\\\hline
+CrytalDrift & 6.79 & 20.33 & 32.91 & 0.382 & 0.371 & 0.346\\
+One-step flow & 5.79 & 16.80 & 26.61 & 0.400 & 0.393 & 0.371\\
+16-step flow & 6.79 & 20.76 & 33.50 & 0.368 & 0.360 & 0.336\\
+Training-set retrieval & 61.86 & 64.60 & 65.19 & 0.040 & 0.041 & 0.042\\
+\hline\end{tabular}\end{table}
+
+The drift minus one-step flow recovery differences at one and twenty draws were $+1.00$ points ($[0.64,1.36]$) and $+6.30$ points ($[5.83,6.77]$), respectively.
+At five draws the RMS recovery difference between CrytalDrift and one-step flow was $+3.53$ percentage points (paired 95\% interval $[3.06,4.00]$). Maximum-site recovery was 9.49\% for drift, 6.27\% for one-step flow, 10.57\% for 16-step flow, and 61.87\% for retrieval. The drift advantage over one-step flow was $+3.22$ points ($[2.85,3.59]$). Requiring native-volume agreement on the RMS-matched draw gave 7.58\%, 7.80\%, 10.25\%, and 54.78\%, respectively, with a drift difference of $-0.22$ points ($[-0.63,0.19]$). Sixteen-step flow recovered $0.44$ points more targets than CrytalDrift by the RMS criterion ($[0.06,0.82]$). Intervals use 10,000 paired resamples of target IDs after averaging recovery indicators across fitted seeds. They condition on the fitted checkpoints.
+
+\input{revision-external-full}
+
+\input{revision-published}
+
+\subsection{Replication on formula-disjoint WBM}
+For WBM we repeated the paired training with seeds 23 and 37, using the original 205,091 structures, 12,819 updates and the same 128 held-out targets as seed 11. The five-draw RMS-recovered target counts for seeds 11, 23 and 37 were $(39,40,37)$ for drift and $(28,35,27)$ for one-step flow. Their paired recovery difference was $+6.77$ percentage points ($[2.60,10.94]$). With the native-volume rule it was $+3.91$ points ($[-0.52,8.07]$). The held-out formulas are disjoint from WBM training. Geometry retrieval can therefore recover an arrangement by assigning the supplied species to sites from a training template.
+
+\begin{table}[!htbp]\centering\small
+\caption{Three fitted seeds on the original 128 WBM test structures, with five proposals per target. Energy is the fair conditional four-feature score. All recovery columns are percentages.}\label{t:wbm-revision}
+\begin{tabular}{lrrrr}\hline Method & Energy & MR@5 & Max@5 & MR+vol.@5\\\hline
+CrytalDrift & 3.592 & 30.21 & 16.41 & 22.66\\
+One-step flow & 4.012 & 23.44 & 8.59 & 18.75\\
+16-step flow & 3.354 & 34.64 & 17.71 & 26.04\\
+Training-set retrieval & 0.300 & 89.32 & 88.54 & 84.38\\
+\hline\end{tabular}\end{table}
+
+The accelerated matcher uses a necessary lattice-frame and site-subset test when the native and primitive reference cells contain the same number of sites. Primitive reduction changed the count for 130 of the 9,046 MP-20 references. Those cases went directly to pymatgen. An independent check used both public matcher calls on 6,144 draws from 512 separately hash-selected targets. Every RMS and maximum-site hit indicator agreed, and the largest normalized RMS difference among matched pairs was $<10^{-8}$.

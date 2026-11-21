@@ -1,0 +1,22 @@
+\begin{inplace}{table}\centering\small
+\caption{Raw recovery by fitted seed and number of draws. Entries are percentages of all targets in the indicated cohort. The binary and full MP-20 columns refer to separately trained networks and separately selected target sets. WBM uses its own formula-disjoint training split. Retrieval seeds index its sampled donors.}\label{t:seed-results}
+\begin{tabular}{llrrrrrrr}\hline
+ & & \multicolumn{3}{c}{Binary MP-20, 128} & \multicolumn{3}{c}{Full MP-20, 9,046} & WBM, 128\\
+Method & Seed & $k{=}1$ & 5 & 20 & $k{=}1$ & 5 & 20 & $k{=}5$\\\hline
+CrytalDrift & 11 & 13.28 & 41.41 & 75.00 & 6.98 & 20.89 & 33.47 & 30.47 \\
+ & 23 & 13.28 & 48.44 & 78.12 & 6.52 & 19.88 & 32.63 & 31.25 \\
+ & 37 & 13.28 & 41.41 & 71.09 & 6.88 & 20.21 & 32.62 & 28.91 \\
+\hline
+One-Euler flow & 11 & 16.41 & 50.78 & 75.00 & 6.16 & 17.90 & 27.57 & 21.88 \\
+ & 23 & 15.62 & 46.88 & 73.44 & 5.28 & 16.46 & 26.66 & 27.34 \\
+ & 37 & 17.97 & 45.31 & 64.84 & 5.93 & 16.03 & 25.60 & 21.09 \\
+\hline
+16-step flow & 11 & 21.88 & 51.56 & 78.12 & 6.72 & 20.57 & 33.11 & 36.72 \\
+ & 23 & 15.62 & 55.47 & 81.25 & 6.60 & 20.87 & 33.97 & 36.72 \\
+ & 37 & 19.53 & 45.31 & 78.91 & 7.04 & 20.85 & 33.43 & 30.47 \\
+\hline
+Retrieval & 11 & 48.44 & 57.81 & 57.81 & 61.80 & 64.69 & 65.18 & 88.28 \\
+ & 23 & 50.00 & 57.81 & 57.81 & 61.81 & 64.47 & 65.20 & 89.84 \\
+ & 37 & 46.88 & 57.03 & 57.81 & 61.97 & 64.64 & 65.18 & 89.84 \\
+\hline
+\end{tabular}\end{inplace}

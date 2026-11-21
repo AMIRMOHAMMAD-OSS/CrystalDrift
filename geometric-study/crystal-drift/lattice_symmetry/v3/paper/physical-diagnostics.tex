@@ -1,0 +1,35 @@
+\section{What changes in the predicted cell}
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{The log-volume column takes the median across the full official 20-draw pools. The remaining geometric summaries use the first 96 registered test IDs with their ordered 20 draws. Shape error is dimensionless and site displacements are in angstroms. The last column is the 95th percentile of each draw's largest site displacement.}
+\begin{tabular}{lrrrrr}\hline
+Generator & Draws & $\log(V/V_*)$ & Shape error & Site median & Site tail\\\hline
+Symbolic seed & 1920 & +0.003 & 0.574 & 0.000 & 0.000\\
+Angular 0.2M & 1920 & +0.089 & 0.571 & 0.293 & 0.924\\
+Contacts 0.2M & 1920 & +0.085 & 0.571 & 0.293 & 0.925\\
+Reciprocal 0.2M & 1920 & +0.108 & 0.571 & 0.293 & 0.925\\
+Angular 2M & 1920 & +0.077 & 0.571 & 0.293 & 0.925\\
+Contacts 2M & 1920 & +0.086 & 0.571 & 0.293 & 0.925\\
+Orbit MeanFlow 2M & 1920 & -0.341 & 0.567 & 0.293 & 0.925\\
+\hline\end{tabular}\end{table}
+
+For the cell-shape diagnostic, Niggli-reduce the lattice, form its Gram matrix and divide by the cube root of its determinant. The error is the Euclidean distance between the sorted log eigenvalues of the proposed and reference unit-determinant matrices. This spectral statistic can coincide for different packings. For site motion we keep the paired seed's site ordering, wrap each fractional component of the update into the centered unit interval and convert to Cartesian displacement in the seed lattice. For a skew cell this chart convention can choose a different image from the shortest physical displacement. The site-median column takes the median within each draw, then the median across draws.
+
+On these same 1,920 ordered proposals, the median log-volume change from the paired seed was +0.069 for 2M contact drift and -0.318 for same-backbone MeanFlow. Their median site-motion summaries were 0.293 and 0.293~\AA, respectively. These paired changes describe the network's action even for target proposals which never match.
+
+\subsection{Observed costs for the empirical-composition pools}
+
+Generating the 10,000 composition-matched candidates took 23.2 seconds for the symbolic prior and 37.4 seconds for the 2M contact map on one CPU thread. The separate released uFlowCSP GPU job took 40.6 seconds. The same-device cost comparison uses the synchronized workload in Table~\ref{tab:main}.
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Each raw pool used the same 10,000 sampled training compositions. Fingerprints counts the structures with usable structure and composition fingerprints for evaluation. The Wasserstein estimate samples within each method's eligible pool. Seconds give the recorded generation jobs on their respective devices and exclude retrospective matching and CHGNet relaxation. Table 1 gives the separate interleaved, shared-device benchmark.}
+\begin{tabular}{lrrrrr}\hline
+Generator & Fingerprints & $W_1(n_{\rm elem})$ & Batch & Device & Seconds\\\hline
+Symbolic seed & 7351 & 0.045 & 32 & CPU & 23.2\\
+Angular 0.2M & 8055 & 0.038 & 32 & CPU & 54.0\\
+Contacts 0.2M & 8056 & 0.049 & 32 & CPU & 36.0\\
+Angular 2M & 8051 & 0.049 & 32 & CPU & 44.5\\
+Contacts 2M & 8061 & 0.038 & 32 & CPU & 37.4\\
+Released angular & 8594 & 0.040 & 32 & CPU & 4.8\\
+Released uFlowCSP & 8584 & 0.008 & 32 & GPU & 40.6\\
+\hline\end{tabular}\end{table}

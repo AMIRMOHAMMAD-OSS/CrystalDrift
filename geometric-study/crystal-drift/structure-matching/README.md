@@ -1,0 +1,9 @@
+# Structure recovery using pymatgen
+
+We applied pymatgen 2024.4.13 StructureMatcher to candidate draws 1–5 in their saved order. The two-atom benchmark uses all 189 official test items. The two- to eight-site benchmark uses the 128 test material IDs with smallest SHA-256 hashes of the literal ID strings. Each candidate gets the target’s supplied elemental composition. All five draws enter the denominator even if no match is returned.
+
+For each pair we call `get_rms_dist(prediction, reference)`. A non-null result counts as a match. We take the best eligible normalized RMS distance within each prefix. The site tolerance is 0.5, relative lattice-length tolerance 0.3, angular tolerance 10 degrees, primitive reduction enabled, volume rescaling enabled, and supercell and subset matching disabled. These settings follow DiffCSP’s reconstruction implementation. That implementation also filters invalid predictions, including chemical and fingerprint checks. Our table measures geometric structure recovery directly and omits those filters. The energy and environment checks in the main report complement the volume rescaling in StructureMatcher. [DiffCSP evaluation code](https://github.com/jiaor17/DiffCSP/blob/main/scripts/compute_metrics.py)
+
+As a positive control, we rescaled the lattice vectors of a held-out AB structure and a multisite structure by 1.35, rotated site order and shifted the origin. Both still matched, with normalized RMS below $6\times10^{-16}$. Comparison records carry the ordered target IDs and five individual RMS values, with null for misses. [Per-method results](by-method.csv) · [Per-seed results](summary.csv)
+
+Reproduce with Python 3.10, NumPy 1.26.4, SciPy 1.10.1, pymatgen 2024.4.13 and spglib 2.5.0. From the parent directory run `python standard_match.py --workers 4 --external`. The external uFlowCSP evaluation uses its single saved inference seed, 2026. Local model evaluations use training seeds 11, 23 and 37.

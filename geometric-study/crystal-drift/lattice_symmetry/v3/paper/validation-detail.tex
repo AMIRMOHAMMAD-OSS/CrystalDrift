@@ -1,0 +1,25 @@
+\section{Capacity, exposure and validation details}
+
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Development and confirmation recovery at five draws out of 96 targets in each panel. Native is the confirmation count satisfying the same-draw volume rule. Checkpoints and per-target flags accompany every row. The longer capacity series is shown separately.}
+\begin{tabular}{lrrrrr}\hline
+Generator & Registered & Look & Dev. & Confirm. & Native\\\hline
+Symbolic seed & 0 & -- & 59 & 48 & 38\\
+large angular & 15,011,747 & half & 62 & 50 & 35\\
+medium angular & 2,098,297 & half & 62 & 51 & 33\\
+medium contacts & 2,098,297 & half & 63 & 50 & 33\\
+medium meanflow & 2,098,297 & full & 64 & 51 & 3\\
+reference contacts & 135,992,027 & half & 62 & 50 & 13\\
+small angular (Gaussian) & 218,497 & half & 62 & 50 & 33\\
+small angular & 218,497 & half & 63 & 50 & 31\\
+small center0 & 218,497 & half & 62 & 52 & 40\\
+small contacts (Gaussian) & 218,497 & half & 62 & 50 & 32\\
+small contacts & 218,497 & full & 63 & 50 & 33\\
+small meanflow & 218,497 & half & 64 & 51 & 4\\
+small pair & 218,497 & half & 62 & 53 & 38\\
+small radial4 & 218,497 & full & 63 & 50 & 29\\
+small reciprocal & 218,497 & full & 63 & 50 & 28\\
+small variance & 218,497 & half & 62 & 50 & 26\\
+\hline\end{tabular}\end{table}
+
+Fresh geometry and negative draws are regenerated deterministically for each later traversal. All methods in a comparison index the same saved bank stream. The Gaussian and distance-based affinities change both weights and the detached displacement direction. A kernel comparison at common exposure uses the same optimizer schedule, reference pairs, query seeds, lattice features and evaluation seeds. The registered two-look screen and the fixed full-traversal reanalysis account separately for early checkpoint selection.

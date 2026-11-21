@@ -1,0 +1,322 @@
+% Include after the main bibliography. Main preamble supplies amsmath and amssymb.
+\begingroup
+\setcounter{section}{0}
+\setcounter{equation}{0}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\ifdefined\theHsection\renewcommand{\theHsection}{supp.\arabic{section}}\fi
+\ifdefined\theHequation\renewcommand{\theHequation}{supp.\arabic{equation}}\fi
+\newcommand{\rd}{\mathbb R}
+\newcommand{\tor}{\mathbb T}
+\newcommand{\zz}{\mathbb Z}
+\newcommand{\ii}{\mathrm i}
+\providecommand{\sg}{\operatorname{sg}}
+\newcommand{\E}{\mathbb E}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\proofend}{\hfill$\square$}
+\newcommand{\claim}[2]{\par\medskip\noindent\textbf{#1.} \emph{#2}\par}
+\newcommand{\work}[1]{\texttt{\detokenize{#1}}}
+
+\begin{center}
+{\Large\bfseries Mathematical supplement}\\[5pt]
+{\large Geometry and training of CrytalDrift}
+\end{center}
+
+\noindent We derive the binary generator's finite-batch gradient and give a condition under which its expected drift vanishes. In a fixed lattice basis the two-site fingerprint recovers the relative motif. For eight sites, inequivalent decorated crystals have identical fingerprints, including every mixed triple used in training. Propositions 1--4 establish these binary results. Section~\ref{s:scaled} gives the multielement fingerprint, sampler and velocity model. Section~\ref{s:weak-limit} proves the finite-bank approximation result for the independently sampled training arm.
+
+\section{What distribution is being learned?}
+Each record supplies a material identifier, a cell composition
+$c=(Z_A,Z_B,n_A,n_B)$ with $Z_A<Z_B$, and one geometry $x$. The counts refer to the deposited cell. Thus $A_2B_2$ and $AB$ are different conditions. For $N$ training records and $N_c$ records at condition $c$, the empirical laws are
+\begin{equation}
+ \widehat\pi(c)=N_c/N,\qquad
+ \widehat P_c=N_c^{-1}\sum_{r:c_r=c}\delta_{x_r},\qquad
+ \widehat P(dc,dx)=\sum_{c:N_c>0}\widehat\pi(c)\,\delta_c(dc)\widehat P_c(dx).
+ \label{s:count}
+\end{equation}
+Every database record has unit counting weight. Its frequency reflects database construction. Equilibrium populations would require a physical ensemble and thermodynamic weights absent from these data. At an unseen composition there is no empirical conditional distribution in \eqref{s:count}.
+
+\begin{center}\small
+\begin{tabular}{lrrr}
+\hline
+Official MP-20 split & All release rows & Two-site $AB$ & Binary cells, 2--8 sites\\\hline
+Training & 27,136 & 512 & 3,630\\
+Validation & 9,047 & 171 & 1,231\\
+Test & 9,046 & 189 & 1,229\\\hline
+\end{tabular}
+\end{center}
+The WyckoffDiff release preserves the source splits \cite{wyckoff}. Material IDs are disjoint across them. The two-site training set contains 472 distinct element pairs. Only 32 of its 189 test targets have a pair seen during training. The original CIFs explicitly list full-occupancy sites with the identity operation in P1. We retain their deposited basis and cell size. Five multisite training cells admit an additional species-preserving translation to fractional tolerance $10^{-5}$. The condition supplies neither a space group nor a target lattice or motif.
+
+\paragraph{Measures on the coordinates.}
+At fixed $c$, labelled coordinates belong to $\rd^6\times(\tor^3)^n$ with $n=n_A+n_B$ and $\tor=\rd/\zz$. Lebesgue measure on the six cell coordinates times normalized Haar measure on the site tori is a coordinate reference. The observed conditional law is atomic. The loss uses samples and never divides by a density or evaluates a Jacobian determinant. Modding out a common translation leaves $n-1$ relative site tori before taking the quotient by within-species permutations.
+
+\newpage
+\section{A joint map of lattice and position noise}
+Let the rows of $L$ be lattice vectors measured in \AA. A site at fractional row $f$ has Cartesian position $fL$. The Gram metric $G=LL^\top$ determines the lengths and angles. We take its numerical entries in \AA$^2$ before applying the logarithm. Define
+\begin{equation}
+ S=\tfrac12\log G,\qquad k=(S_{11},S_{22},S_{33},\sqrt2 S_{12},\sqrt2 S_{13},\sqrt2 S_{23}).
+ \label{s:cell}
+\end{equation}
+The factors $\sqrt2$ give $\|k-k'\|_2=\|S-S'\|_{\rm F}$ before componentwise standardization. The network emits $\tilde k$. We reconstruct $k=\mu+\sigma\odot\tilde k$ using the training mean and population standard deviation with floor $10^{-5}$. Then $G=\exp(2S)$ is positive definite for finite $S$ in exact arithmetic. Either $\exp S$ or a Cholesky factor has Gram matrix $G$. Cartesian changes of orthonormal frame preserve $G$. For $U\in GL(3,\zz)$, $L'=UL$ and $f'=fU^{-1}$ describe the same periodic positions, but $G'=UGU^\top$. The descriptor retains this choice of lattice basis.
+
+\paragraph{Network inputs.}
+Draw $\eta\sim\mathcal N(0,I_6)$ and independent $u_j\sim{\rm Haar}(\tor^3)$. Write $v_{j\ell}=\exp(2\pi\ii u_{j\ell})$, $m_{s\ell}=n_s^{-1}\sum_{j:z_j=s}v_{j\ell}$ and $d=(\eta,n/8,n_A/n)$. For each occupied site form
+\[
+ r_j=\big(\operatorname{Re}(v_{j\ell}\bar m_{s\ell}),
+          \operatorname{Im}(v_{j\ell}\bar m_{s\ell})\big)_{s\in\{A,B\},\,\ell=1,2,3}.
+\]
+A shared two-layer width-60 SiLU network $H$ takes the concatenation of a learned 16-component element embedding, $r_j$ and $d$. With $h_j=H(z_j,r_j,d)$ and a shared context $b=C(n^{-1}\sum_jh_j,d)$, the two heads return
+\begin{equation}
+ \tilde k=Wb+b_0+0.15\eta,\qquad
+ f_j=\big[u_j+\tfrac12\tanh T(h_j,b)\big]\bmod1 .
+ \label{s:generator}
+\end{equation}
+$C$ has one affine layer with SiLU and $T$ has two affine layers with one SiLU. Species masks exclude padding. Together, \eqref{s:cell} and \eqref{s:generator} define $g_\theta(c,\eta,u)$ and the pushforward law $Q_{\theta,c}$. Rotation of a Cartesian rendering is a choice of representative of the generated Gram cell.
+
+\claim{Proposition 1}{A common fractional translation leaves the predicted cell fixed and translates every occupied output site. A simultaneous permutation of input sites and their labels reorders the site outputs and preserves the cell.}
+\noindent\emph{Proof.}
+For a shift $t\in\tor^3$, both $v_{j\ell}$ and $m_{s\ell}$ acquire the factor $\exp(2\pi\ii t_\ell)$. Thus $r_j$, $h_j$, $b$ and the shift predicted by $T$ are unchanged. Equation~\eqref{s:generator} adds $t$ to each output site. For any common permutation of labels and sites, each species mean is unchanged and the shared site network permutes its outputs. The masked mean in $b$ is invariant and $T$ again acts site by site. \proofend
+
+The base law is invariant to the same translation and to like-species permutations, giving the corresponding invariance of the generated law. At two-site evaluation the implementation sets $u_A=0$ and draws $u_B$ uniformly. Subtracting the first noise site from two independent Haar sites produces this same relative law. Proposition 1 therefore justifies that evaluation convention for the returned relative geometry.
+
+\paragraph{A limit of the residual map.}
+At fixed $c,\eta$ and finite network parameters, the occupied-site map lifts to $F(u)=u+s(u)$ on $\rd^{3n}$, where $s$ is continuous, periodic and componentwise bounded by $1/2$. For any target vector $v$, the continuous map $x\mapsto v-s(x)$ takes the closed cube $v+[-1/2,1/2]^{3n}$ into itself. Brouwer's fixed-point theorem gives $x=v-s(x)$, so $F$ is onto. On the torus every nonempty open set therefore has a nonempty open preimage and hence positive probability under input Haar measure. This also holds after averaging over $\eta$. The positional cross-power in Section~\ref{s:fingerprint} varies continuously over infinitely many values, for example when the two species occupy two distinct sites and their separation varies. Its model law cannot equal the finite empirical feature law exactly. The sufficient equality condition below is idealized. Concentrating most mass near observed motifs remains possible in principle.
+
+\newpage
+\section{The fingerprint and an exact degeneracy}\label{s:fingerprint}
+Let $e_\ell$ be coordinate unit vectors. The 13 waves in $H$ consist of $e_\ell$, $2e_\ell$, $e_i+e_j$ and $e_i-e_j$ for $i<j$, and $(1,1,1)$. For each species define
+\[
+ a_s(h)=n_s^{-1}\sum_{j:z_j=s}\exp(2\pi\ii f_jh),\qquad
+ C(h)=\overline{a_A(h)}a_B(h),
+\]
+with integer column $h$. The AB descriptor $\Phi$ concatenates $\tilde k/\sqrt6$ with the real and imaginary parts of $C/\sqrt{13}$. The multisite descriptor appends $|a_A|^2/\sqrt{13}$, $|a_B|^2/\sqrt{13}$ and the real and imaginary parts of the six entries
+\begin{equation}
+ \frac{1}{\sqrt6}\,a_s(e_i)a_s(e_j)\overline{a_{s'}(e_i+e_j)},
+ \qquad i<j,\quad (s,s')\in\{(A,B),(B,A)\}.
+ \label{s:triples}
+\end{equation}
+Their real dimensions are 32 and 70. A common translation multiplies $a_s(h)$ by $\exp(2\pi\ii th)$, which cancels in each product. Species-wise averages are unaffected by site ordering. Under $L'=UL$, preserving a Fourier phase requires $h'=Uh$. The finite $H$ is generally not closed under this action.
+
+\claim{Proposition 2}{For fixed two-site composition, the fingerprint determines the released-basis metric and the motif up to a common origin.}
+\noindent\emph{Proof.}
+Write $\delta=f_B-f_A$. Then $C(h)=\exp(2\pi\ii\delta h)$. At each $h=e_\ell$, its argument divided by $2\pi$ recovers $\delta_\ell\bmod1$. The first six entries invert by \eqref{s:cell}. For a displacement $\Delta$, the squared Euclidean distance of the Fourier blocks is $4|H|^{-1}\sum_{h\in H}\sin^2(\pi\Delta h)$, independent of $\delta$. \proofend
+
+Consequently equality of the full AB descriptor \emph{laws} implies equality of the released-basis relative geometry laws, using this measurable inverse. For displacements of 0.02 along the first axis across and away from the chart seam, the computed distances were both 0.110055. The raw AB ablation uses $2((f_B-f_A)\bmod1-1/2)$ and gave 1.96 and 0.04.
+
+\claim{Proposition 3}{Two inequivalent eight-site binary motifs at the same composition and metric can agree in all 70 components.}
+\noindent\emph{Proof.}
+Use the classical 12-tone homometric pair $S_1=\{0,1,4,6\}$ and $S_2=\{0,1,3,7\}$ in $\zz/12$, as given by Mandereau et al.\ \cite{zrelation}, Fig.~1. We lift this pair to a decorated periodic cell and test the entire implemented fingerprint. For either $S$, put four A sites at $(s/12,0,0)$ for $s\in S$ and four B sites at their common translate $t=(0,1/3,0)$. The ordered difference counts of both sets are four at zero, two at six and one at each other residue. Hence $\alpha_S(k)=\tfrac14\sum_{s\in S}e^{2\pi\ii ks/12}$ has the same squared modulus for every $k$, by expansion of $|\alpha_S(k)|^2$. This is homometry \cite{homometry}. Here $a_A(h)=\alpha_S(h_1)$ and $a_B(h)=e^{2\pi\ii th}a_A(h)$. Thus every cross-power and single-species power agrees. In each triple \eqref{s:triples}, at most one of $e_i,e_j$ has nonzero first component. After removing a common phase depending only on $t,i,j$, the triple equals $1$ or $|\alpha_S(1)|^2$. All six triples agree. Yet the circular A-site gap multisets are $\{1,2,3,6\}$ and $\{1,2,4,5\}$, in twelfths. For physical inequivalence choose a rectangular lattice whose squared lengths are linearly independent over the rationals. The four distinct cyclic gaps in each A row rule out a shorter translation period, so the displayed lattice is the full translation lattice of each decoration. For a lattice isometry the squared length of the image of axis vector $i$ is $\sum_j m_j^2 G_{jj}=G_{ii}$ for integers $m_j$. Rational independence forces $m_i=\pm1$ and $m_{j\ne i}=0$. Only translations and reversal along the row remain, and the gap multisets exclude both. \proofend
+
+In float64 the two $\mathrm{O}_4\mathrm{Si}_4$ examples differed by at most $4.16\times10^{-17}$ across the 70 implemented entries. The saved check uses $G=100\,\mathrm{diag}(1,\sqrt2,\sqrt3)$ in \AA$^2$.
+
+\newpage
+\section{Bank exchangeability and zero expected drift}\label{s:banks}
+In pooled training, draw two independent lists of $B$ training indices with replacement. Query indices supply \emph{only conditions}. Generate $h_i=\Phi(g_\theta(c_i,\xi_i))$ with fresh noise. Each reference index supplies its real descriptor $p_j$ and condition $d_j$. From independent noise at that same $d_j$ generate $n_j$. Within-formula training instead samples $B/4$ block labels with probabilities $\widehat\pi$ from \eqref{s:count}. In each block draw four query noises, four independent training records with replacement at that label, and four independent negative noises. Repeated block labels remain separate. A singleton formula always supplies the same positive structure.
+
+Let $y=(p_1,\ldots,p_m,n_1,\ldots,n_m)$ in a bank. The matching condition list repeats in the same order. With $q_i=c_i$, let $\chi(c)=(Z_A/20,Z_B/20,n_A/n,n/4)$ and define the logits and affinity
+\begin{align}
+ \ell_{ij}^{\tau}
+ &=-\norm{h_i-y_j}_2/\tau-\tfrac12\norm{\chi(q_i)-\chi(d_j)}_2^2, \label{s:logits}\\
+ A_{ij}^{\tau}
+ &=\frac{\exp(\ell_{ij}^{\tau})}{\sqrt{\sum_v\exp(\ell_{iv}^{\tau})\sum_u\exp(\ell_{uj}^{\tau})}}.
+ \label{s:a}
+\end{align}
+The second term vanishes within a formula. The affinity is the geometric mean of the row and column softmaxes. It need not be doubly stochastic. The sums run over the entire pooled bank or within one formula block. For this temperature set $m_i^\pm=\sum_{j\in\pm}A_{ij}^{\tau}$ and $b_i^\pm=\sum_{j\in\pm}A_{ij}^{\tau}y_j$. Then
+\begin{align}
+ D_i^\tau
+ &=m_i^- b_i^+-m_i^+ b_i^-
+   =\sum_{j\in+,\,v\in-} A_{ij}^\tau A_{iv}^\tau(y_j-y_v), \label{s:force}\\
+ s_\tau&=\sqrt{B^{-1}\sum_{i=1}^{B}\norm{D_i^\tau}^2+10^{-8}},
+ \qquad V_i=\tfrac12\sum_{\tau\in\{0.3,0.8\}}D_i^\tau/s_\tau . \label{s:rms}
+\end{align}
+The RMS pools all queries even in separate formula blocks. The sign in \eqref{s:force} directs the field from the negative centroid to the positive centroid, multiplied by $m_i^+m_i^-$. The two masses also cancel any common feature offset in the centroid difference.
+
+\claim{Proposition 4}{Suppose $\Phi_\#Q_{\theta,d}=\Phi_\#\widehat P_d$ at each sampled reference condition $d$. Conditional on the training archive, parameters, query inputs and every sampled condition label, $\E[V_i]=0$ for each query.}
+\noindent\emph{Proof.}
+Given this information, every real record is still sampled from its formula group. The real and negative descriptor arrays are conditionally independent with the same conditional product law. Their joint law is therefore invariant under simultaneously exchanging entire banks. This swap permutes the columns of \eqref{s:logits} and preserves their condition labels. Equation~\eqref{s:a} permutes the columns identically. The two terms of \eqref{s:force} exchange, each $s_\tau$ stays fixed, and every $V_i$ changes sign. The normalized field is integrable since $\|D_i^\tau\|/s_\tau\le\sqrt B$. Conditional symmetry gives the result. \proofend
+
+Fixing the realized reference indices as well would generally destroy this argument. Nor does matching pooled unconditional feature laws ensure exchangeability given the paired condition labels. Since the live query Jacobian is fixed under this conditioning, the expected detached data gradient also vanishes. Weight decay and momentum in the optimizer are separate. Equality is a sufficient condition on the sampled descriptor laws. The proof supplies neither a convergence rate nor a way to infer equality of structural laws from a zero expected update. The positional support argument in Section~S2 rules out exact equality of these descriptor laws for this residual generator and a finite archive. Neither the individual batch field nor the reported loss must vanish at equality. Proposition~3 gives distinct structural measures with identical descriptor pushforwards. The two motifs contribute the same descriptor as references. At a live query, the feature and generator Jacobians can differ, so identical feature values alone do not imply identical parameter gradients.
+
+\newpage
+\section{Gradients, training and computational cost}
+Write $J_i=\partial_\theta[\Phi(g_\theta(c_i,\xi_i))]$. One detached regression step uses
+\begin{equation}
+ t_i=\sg(h_i+V_i),\qquad
+ \mathcal L=\frac1{2B}\sum_i\norm{h_i-t_i}^2,\qquad
+ \nabla_\theta\mathcal L=-\frac1B\sum_i J_i^\top V_i .
+ \label{s:loss}
+\end{equation}
+Indeed $t_i$ is constant in the backward pass, giving $(h_i-t_i)/B=-V_i/B$ per query. Applying the chain rule yields \eqref{s:loss}. The references, affinity, RMS, and copy of the query inside the target all have zero backward derivative. Proposition~4 also gives zero conditional expected \emph{loss gradient}, since all $J_i$ are fixed under the stated conditioning. AdamW has optimizer state and a separate weight-decay update. This proposition is not an assertion about its stationary parameter distribution.
+
+\paragraph{What moves after a parameter update.}
+For plain gradient descent of size $\gamma$ at differentiable parameters, the first-order change at query $\ell$ is
+\[
+ \Delta h_\ell=\frac{\gamma}{B}\sum_i J_\ell J_i^\top V_i+o(\gamma).
+\]
+This pullback couples queries through shared parameters. If $J$ vertically stacks the query Jacobians and $V$ stacks their field vectors, any component of $V$ in $\ker J^\top$ yields zero parameter gradient. Thus zero gradient cannot certify zero feature drift. In local fractional coordinates, a displacement derivative of a species coefficient is $2\pi\ii\,e^{2\pi\ii f_jh}\,(\Delta f_j h)/n_s$ for an occupied site of species $s$. This makes the periodic terms differentiable across chart seams when read as functions on the torus. It also implies zero derivative along a common origin shift after taking the products in \eqref{s:triples}. Pulling a Euclidean feature gradient through these derivatives is distinct from specifying a Riemannian metric and its intrinsic gradient on the crystal space.
+
+\paragraph{Training algorithm.}
+\begin{enumerate}
+\item Fit the six training-coordinate means and scales for the chosen cohort. Evaluate and cache its real descriptors once. Initialize the generator and AdamW.
+\item Draw query labels and the real/negative reference labels as in Section~\ref{s:banks}. Evaluate the generator on $B$ negative noises without gradients, then on $B$ independent query noises with gradients. Compute descriptors from each evaluation.
+\item Build distances once per bank. At each temperature compute \eqref{s:a}--\eqref{s:rms}. Detach the target and backpropagate \eqref{s:loss}. Clip the aggregate gradient norm to 10 and apply AdamW with learning rate 0.001 and weight decay 0.01. Each original fit uses $B=64$ and 1,200 updates. The three fit seeds are 11, 23 and 37.
+\end{enumerate}
+\paragraph{Training and sampling complexity.}
+With $n$ sites, width $w$ and $K=13$ waves, one generator call takes $O(nw^2)$ dense-layer arithmetic and a fingerprint takes $O(nK)$ at fixed spatial dimension. For descriptor dimension $D$, the pooled $B$ by $2B$ reference matrix costs $O(B^2D)$ time and $O(B^2)$ affinity storage at fixed temperature count. For block width $b=4$, $(B/b)$ matrices of size $b$ by $2b$ cost $O(BbD)$ time and $O(Bb)$ affinity storage. At $B=64$ there are 8,192 and 512 query--reference entries respectively. The code uses weighted sums in \eqref{s:force}, avoiding explicit positive--negative pairs.
+
+Sampling draws noise, evaluates \eqref{s:generator} once, reverses standardization and decodes the cell. Multiple proposals use independent noises. Drawing the de novo composition, serializing a CIF, structure matching and energy relaxation are separately measurable stages. They require additional work beyond the network call.
+
+\newpage
+\section{Which drifting results carry over?}
+\paragraph{Original drifting.}
+Deng et al.\ \cite{deng} (v2) define the pushforward in Sec.~3.1. Their Eqs.~(3) and (6) in Sec.~3.2 give bank antisymmetry and a detached squared target. Eqs.~(8)--(12) describe a population difference of kernel-weighted displacements with an unsquared Euclidean distance in the exponential. Sec.~3.4 places the update in feature space. Appendix~A.1, Algorithm~2, gives row/column softmax normalization and cross-multiplication of positive and negative masses. Equations~\eqref{s:a} and \eqref{s:force} implement that construction. Their algorithm masks self-negatives when queries are reused as references. Here independent negatives make that mask unnecessary. Our chemistry weights, exact-formula banks and crystallographic fingerprint specify the present conditional problem. Their Appendix~C.1 discusses identifiability in an idealized population model. This heuristic supplies no converse for the finite normalized estimator in \eqref{s:rms}.
+
+\paragraph{TokenDrift.}
+Oba et al.\ \cite{tokendrift} (v1) refine a discrete diffusion language model. In Sec.~3.1, logits on predicted positions give a soft input $pE$ to a frozen encoder $\phi$. In Secs.~3.2--3.3 their squared-distance logits are $-\|h-y\|^2/\tau$. They average temperature-specific fields divided by their batch RMS and regress onto $\sg(h+\alpha V)$ using the $1/(2B)$ factor. We inherit that RMS and loss convention with $\alpha=1$. Our geometric logits use the unsquared norm in \eqref{s:logits}, and gradients reach fractional sites and lattice outputs through an analytic $\Phi$. TokenDrift Algorithm~1 allows feature queues and excludes the query itself from current negatives. Sec.~3.5 uses the original discrete diffusion sampler at inference. Our single call follows from the noise-to-cell map \eqref{s:generator}. It does not follow from a detached target alone.
+
+\paragraph{SymDrift.}
+Darouich et al.\ \cite{symdrift} (v2) distinguish a coordinate field on unaugmented samples from one that respects a symmetrized target (Sec.~4.1). Their Eq.~(13) aligns each pair by optimizing over transformations. Eq.~(14) instead concatenates sorted type-conditioned pair distances in a molecular embedding. CrytalDrift takes this second, invariant-feature approach in periodic cells, using a Gram metric and phase-cancelling sums. It requires no atom correspondence between a query and a reference. The resulting feature distance has a different geometry from a minimum over transformed crystals. Proposition~3 identifies exactly what information its multisite version can lose.
+
+\paragraph{Drift-React.}
+Schlama and Schwaller \cite{driftreact} condition on the reactant and product geometries and use a Sinkhorn-weighted field to train an $SE(3)$-equivariant generator of complete reaction paths. Joint prediction in one call is the shared computational idea. Here the extent of the periodic cell is unknown, only the element counts are supplied, and attraction and repulsion compare invariant Fourier products of fractional sites.
+
+\paragraph{Kernel-gradient drifting.}
+For a suitable positive normalized kernel $K$ let $\bar p_K(x)=\int K(x,y)\,dP(y)$ and similarly for $Q$. Esteban-Casadevall et al.\ \cite{kgdrift} (v2) derive $V^\nabla=\nabla\log\bar p_K-\nabla\log\bar q_K$ (Prop.~3.1). Their Secs.~3.3--3.5 connect zero field everywhere to equality of laws when the smoothing is injective and its positive normalized densities have the same score on a connected domain. Sec.~4.3 uses the Riemannian gradient. Differentiating our radial log affinity in the query would produce a unit displacement divided by $\tau$ away from coincidences. Equation~\eqref{s:force} instead forms weighted reference-coordinate differences, includes column normalization and rescales the batch. The score-ratio identity and its identifiability theorem therefore do not justify a converse for our estimator.
+
+\paragraph{Crystal flows.}
+FlowMM \cite{flowmm} trains a Riemannian flow-matching velocity for periodic coordinates and cell parameters. CrystalFlow \cite{crystalflow} uses a symmetric log-lattice representation and conditional flow matching. uFlowCSP \cite{uflow} (v1) learns a mean-flow predictor and already generates complete cells in one or a few evaluations (Secs.~2.1--2.5). These works establish geometric representation and sampling precedents. The learned object in \eqref{s:loss} is a direct map trained against independently generated reference descriptors.
+
+\newpage
+\section{Held-out estimators and implementation checks}
+The training descriptor is distinct from the evaluation environment
+$a(x)=(\sqrt{\det G}/n,d_{AA},d_{AB},d_{BB})$.
+For each species pair $s,t$ take the least distance over all sites of those labels and all lattice images,
+\[
+ d_{st}^2=\min_{j:z_j=s,\;k:z_k=t,\;v\in\zz^3}
+       (f_j-f_k+v)G(f_j-f_k+v)^\top ,
+\]
+excluding $j=k,v=0$. A site and a nonzero image of itself are allowed. This search is invariant under any unimodular basis change by relabelling $v$. For two-site $AB$, $d_{AA}=d_{BB}$ is the shortest nonzero lattice-vector length. It enters the score only once. For any displacement row $d$, Cauchy--Schwarz gives $|d_\ell|\leq\sqrt{dGd^\top}\,\sqrt{(G^{-1})_{\ell\ell}}$. This bounds each integer image index that could improve an observed distance. The implementation certifies its finite image stencil with this inequality and falls back to a Cholesky sphere search for unresolved cells. For the binary score a geometry is numerically evaluable only if all coordinates are finite, $\max_i|k_i|<12$, and the extreme eigenvalues of $G$ satisfy $\lambda_{\min}>\max(10^{-12},10^{-10}\lambda_{\max})$ in numerical \AA$^2$ units. Contacts below $0.5$~\AA\ are counted separately.
+
+\paragraph{A score for a finite forecast.}
+Before taking logs, the implementation floors each retained environment coordinate at $10^{-8}$ in its stated units. It standardizes with training means and population standard deviations, using scale one for any standard deviation below $10^{-8}$. Let $y_i$ be a held-out observation and $x_{im}$ its model forecasts after this transform. For $M_i$ numerically evaluable draws, the energy score of the empirical forecast measure \cite{energy} is
+\begin{equation}
+ E_i=\frac1{M_i}\sum_m\|x_{im}-y_i\|_2
+       -\frac1{2M_i^2}\sum_{m,\ell}\|x_{im}-x_{i\ell}\|_2 . \label{s:energy}
+\end{equation}
+The diagonal terms vanish. The $M_i^2$ denominator specifies the empirical measure, so its expectation generally depends on ensemble size. The score omits a case with no evaluable draw and reports failures separately. A finite close-contact example still enters the score. For this absolute-geometry score the budgets are 20 draws on each of 189 two-site test cells and five on each of 1,229 multisite test cells. The separate raw CSP comparisons retain ordered prefixes up to twenty on the 128-target binary cohort and on full MP-20. Paired intervals use 10,000 bootstrap resamples of held-out IDs after averaging each per-ID score across the three fitted seeds. The resampling conditions on these fitted models.
+
+\paragraph{Structural recovery.}
+An independent match calls \work{pymatgen.StructureMatcher.get_rms_dist} with relative length tolerance 0.3, site tolerance 0.5 in the matcher's normalized length units, and angle tolerance $10^\circ$. Primitive-cell reduction and isotropic volume rescaling are enabled. For candidate hits $I_{im}\in\{0,1\}$, recovery through draw $M$ is $N_{\rm test}^{-1}\sum_i\max_{m\le M} I_{im}$. The binary comparison uses all 189 AB IDs and the 128 multisite IDs with lexicographically smallest SHA-256 digests. The expanded full-chemistry comparison uses all 9,046 released MP-20 test IDs. The absolute-volume term in \eqref{s:energy} complements the rescaled matcher. Neither statistic measures energy in eV or establishes thermodynamic stability.
+
+\paragraph{Reading the implementation.}
+\work{data.py} packs $G$ and computes the periodic assessment. In \work{model.py}, \work{relative_phases} and \work{CrystalGenerator.forward} implement Proposition~1, \work{crystal_features} implements the 13 waves and six triples, and \work{drifting_field} and \work{within_formula_field} implement \eqref{s:logits}--\eqref{s:rms}. \work{train.py} draws the two banks and detaches the target in \eqref{s:loss}. \work{standard_match.py} fixes the candidate prefixes and matcher settings. In the saved float64 check (\work{verify.py} and \work{geometry-checks.json}), the maximum discrepancy after an origin shift and site reordering was $1.03\times10^{-15}$ for the multisite descriptor. The maximum errors were $1.11\times10^{-16}$ for generator equivariance, two-site displacement reconstruction and pooled bank-swap antisymmetry. These are numerical checks on fixed examples. Propositions 1--4 state the mathematical scope.
+\newpage
+\section{The multielement extension on MP-20 and WBM}\label{s:scaled}
+The extension in \work{scaled/family.py} receives up to 20 occupied sites of any available element, sorted by atomic number and padded with zeros. The full MP-20 run keeps the 27,136, 9,047 and 9,046 official train, validation and test rows. For WBM, 256,259 of 256,963 DFT-relaxed entries have one to 20 native sites. A fixed hash partitions reduced formulas into disjoint train, validation and test groups containing 205,091, 25,117 and 26,051 structures. Our preprocessing applies no additional energy threshold to either release. The condition supplied at inference remains the full elemental multiset of a cell.
+
+\paragraph{Network and fingerprint.}
+Let $a_s(h)$ be the normalized Fourier sum for each occupied species, $a_*(h)=n^{-1}\sum_s n_s a_s(h)$, and $a_0(h)$ the sum normalized within the lowest-$Z$ species. The width-64 shared site network uses relative phases of a site's three unit frequencies against its own species and all occupied sites. It also receives its species fraction, learned element embedding, occupancy mask and global context. The latter concatenates the mean learned embedding, six cell inputs, $t,\sin t,\cos t$ and $n/20$. A masked mean supplies the shared output heads. The one-call map uses $t=0$ and the same residual coefficients as \eqref{s:generator}. These operations preserve the common-origin equivariance of the output coordinates.
+
+For every sorted occupied slot $j$ of species $s$ and wave $h\in H$, the training descriptor uses
+\begin{equation}
+ \frac{1}{\sqrt{5n|H|}}
+ \left(|a_s(h)|^2,\,
+ \operatorname{Re}(a_s\bar a_*),\,\operatorname{Im}(a_s\bar a_*),\,
+ \operatorname{Re}(a_s\bar a_0),\,\operatorname{Im}(a_s\bar a_0)\right).
+ \label{s:extended}
+\end{equation}
+The products in \eqref{s:extended} use the same $h$. Flattening all 20 slot blocks including zero padding and adjoining $\tilde k/\sqrt6$ gives $6+20\cdot13\cdot5=1{,}306$ real entries. Unlike species have a prescribed sorted slot order. Like-species slots repeat identical coefficients, so relabelling the atoms of one species leaves the descriptor unchanged. Every product cancels a common translation phase. These normalized pair products replace the six binary triple products. They supply no general reconstruction guarantee. The implementation uses dense same-species masks, so the masked matrix products cost $O(n_{\max}^2|H|)$ for padded width $n_{\max}=20$.
+
+\paragraph{Shuffled training anchors.}
+\work{scaled/experiment.py} groups records by the complete sorted label vector. For each formula block, an anchor comes from a shuffled stream of training rows. The anchor is the first positive, and the remaining positives are sampled with replacement from that exact composition. Independent query and negative noises are drawn for every slot. The direction and detached loss use \eqref{s:force}--\eqref{s:loss} with blockwise affinities and a common batch RMS. Swapping both banks still reverses the field as an algebraic identity. Given training history, the remaining anchors in a permutation generally differ from independent empirical draws. The conditional product-law proof in Proposition 4 does not directly cover this sampling design.
+
+\paragraph{Matched flow baseline.}
+The comparison trains the same set architecture as a time-dependent velocity network. Randomly permute target positions within species and form $v_j=((f_{1j}-f_{0j}+1/2)\bmod1)-1/2$, then subtract the occupied-site mean to obtain $\bar v_j$. At a uniform $t$, evaluate the net at $k_t=(1-t)k_0+tk_1$ and $f_{tj}=(f_{0j}+t\bar v_j)\bmod1$. The two losses are mean squared errors on $k_1-k_0$ and $\sqrt{12}\,\bar v_j$, the second averaged over occupied coordinates. Euler sampling divides the site output by $\sqrt{12}$, wraps positions and updates the cell at each step. This baseline controls the architecture and conditional input for an objective comparison. At the limiting source endpoint of the independent coupling, a squared-error-optimal cell velocity is $\mathbb E[k_1\mid c]-k_0$, since the source noise is independent of the target given $c$. A single unit Euler update would then return the conditional cell mean. Continuous-time training samples $t=0$ with probability zero, so this describes the endpoint extension of the ideal regressor. A finite fitted network can retain noise dependence there. The released uFlowCSP checkpoint learns a different one-step map.
+
+\newpage
+\ifdefined\crytalmark\crytalmark{crystaltheory}{Crystal diffusion, flows and Wyckoff orbits}\fi
+\section{From crystal scores and flows to a one-call drift}\label{s:crystalflows}
+The same fractional coordinates can serve as a diffusion state, a point on a conditional path, or the output of a direct map. The lattice and translation conventions determine which distances, scores and symmetries those constructions actually use. The following derivations use column lattices $A=L^\top$ when referring to the source papers and row fractional coordinates as in this implementation otherwise.
+
+\paragraph{Periodic scores in DiffCSP.}
+Jiao et al.\ \cite{diffcsp}, Secs.~4.1--4.2, Eqs.~(2)--(6), diffuse a column lattice in its nine entries with $A_t=\sqrt{\bar\alpha_t}A_0+\sqrt{1-\bar\alpha_t}\,\epsilon$, $\epsilon_{ij}\sim\mathcal N(0,1)$. Their Proposition~1 requires $\hat\epsilon_A(QA,F)=Q\hat\epsilon_A(A,F)$ for $Q\in O(3)$, with species and time fixed. The forward kernel is covariant: rotating the clean lattice $A_0$ rotates the conditional law of $A_t$. The reverse marginal law is rotation invariant when an equivariant reverse kernel starts from an invariant prior. A fixed $A_0$ still sets a frame for its own conditional law. For fractional coordinates the periodic perturbation is $F_t=(F_0+\sigma_t\epsilon_F)\bmod1$. Write $D=F_t-F_0$ in any lifts and $w_Z=\exp[-\|D+Z\|_{\rm F}^2/(2\sigma_t^2)]$. Differentiating their wrapped density gives
+\begin{equation}
+ q(F_t\mid F_0)\ \propto\!\sum_{Z\in\zz^{n\times3}}w_Z,\qquad
+ \nabla_{F_t}\log q(F_t\mid F_0)
+ =-\sigma_t^{-2}\frac{\sum_Z w_Z(D+Z)}{\sum_Z w_Z}.
+ \label{s:wrapped}
+\end{equation}
+Integer changes of lift reindex the sum. A shift of both $F_t$ and $F_0$ by one origin also leaves the score unchanged. DiffCSP regresses the conditional score with a noise-level weight. Its Proposition~2 relates origin invariance of the learned denoiser to that of the generated law. CrytalDrift uses integer Fourier phases to make its training coordinates periodic, but its supervision is the two-bank displacement \eqref{s:force}. There is no conditioning on $F_0$ corrupted to a specified noise level and no wrapped-density gradient in that update.
+
+\paragraph{The log-stretch lattice chart in CrystalFlow.}
+Luo et al.\ \cite{crystalflow} give the column-lattice decomposition $A=Q\exp(\sum_{\nu=1}^6 c_\nu B_\nu)$ immediately before Eqs.~(8)--(9) in arXiv 2412.11693v2. The $B_\nu$ span the symmetric matrices. Let $P=(A^\top A)^{1/2}$, the positive stretch in the right polar decomposition. Then
+\[
+ A=QP,\qquad \sum_\nu c_\nu B_\nu=\log P=\tfrac12\log(A^\top A)
+ =\tfrac12\log(LL^\top)=S .
+\]
+Thus the two methods represent exactly the same tensor before the basis coordinates and their scales are chosen. In \eqref{s:cell}, the off-diagonal basis matrices are $(E_{ij}+E_{ji})/\sqrt2$, so multiplying their coefficients by these matrices reconstructs $S$ without rescaling its Frobenius norm. A left multiplication $A\mapsto QA$ cancels from $A^\top A$. Changing the integral lattice basis acts on its right and generally changes $S$.
+
+CrystalFlow uses a Gaussian conditional lattice path with mean $(1-t)c_0+tc_1$ and target velocity $c_1-c_0$. Its fractional path wraps a Gaussian about a periodic interpolation (Eqs.~(10)--(11) in that version). Our matched baseline interpolates the standardized stretch and regresses the cell displacement. The direct head in \eqref{s:generator} instead predicts the standardized terminal stretch. Its training signal arrives through all reference-feature distances, with the cell block weighted by $1/\sqrt6$.
+
+\newpage
+\paragraph{Translation removal in FlowMM.}
+Miller et al.\ \cite{flowmm}, arXiv 2406.04713v1, Eqs.~(11)--(15), write the fractional torus exponential as addition modulo one and the logarithm by the componentwise angle
+\[
+ v_j=\frac{1}{2\pi}\operatorname{atan2}\!\left(\sin[2\pi(f_{1j}-f_{0j})],
+                                       \cos[2\pi(f_{1j}-f_{0j})]\right).
+\]
+Their mean-free target removes the shared translation in the tangent plane. Away from the half-cell cut, $v_j$ agrees with the wrapped difference in Section~\ref{s:scaled}. Under the fractional Euclidean product metric, the orthogonal projector transverse to the translation direction is $\Pi=I_n-\mathbf1\mathbf1^\top/n$. Our baseline's path is $F_t=(F_0+t\Pi v)\bmod1$. Since $f_{0j}+v_j=f_{1j}\bmod1$, its endpoint is $F_1-\mathbf1 n^{-1}\sum_jv_j\bmod1$, a common translate of the target. Projecting these componentwise shortest lifts need not give the shortest path on the quotient. Take two sites in one fractional dimension with wrapped displacements $(0.49,-0.49)$. These already have zero mean. The alternative lifts $(0.49,0.51)$ have the same endpoints and project to $(-0.01,0.01)$, whose squared norm is smaller. This distinction matters because an ordinary arithmetic mean of wrapped site coordinates depends on the lifts of individual atoms. The direct generator handles the same common-origin freedom with the phase cancellation of Proposition~1 and a target descriptor invariant under that action.
+
+\paragraph{Fractional and physical shortest displacements.}
+The torus logarithm above chooses a shortest displacement under a unit fractional metric. A physical nearest image instead minimizes $(d+m)G(d+m)^\top$ over $m\in\zz^3$. For a planar slice with two unit-length vectors meeting at $60^\circ$ take $G_{11}=G_{22}=1$, $G_{12}=1/2$ and $d=(0.49,0.49)$. Coordinatewise wrapping keeps $d$ and gives squared physical distance $0.7203$. The image $(-0.51,0.49)$ has squared length $0.2503$. One may use the fractional path for training while requiring the metric-aware search of Section~S7 for a contact threshold in \AA. A fractional loss alone cannot establish that a generated contact is physically plausible.
+
+\paragraph{Orbit coordinates impose a stronger constraint.}
+For a chosen unit cell, restrict the space-group operations to those preserving its translation lattice. Their quotient by the cell translations is a finite group $\Gamma$, acting on a fractional column $x$ by $x\mapsto R_gx+t_g\bmod1$. For the site stabilizer $\Gamma_x=\{g:g x=x\bmod1\}$, orbit--stabilizer gives multiplicity $|\Gamma|/|\Gamma_x|$. On a fixed branch of a Wyckoff row, differentiating $(R_g-I)x=-t_g\bmod\zz^3$ for its stabilizer gives the tangent directions $\bigcap_{g\in\Gamma_x}\ker(R_g-I)$. Their dimension counts free local parameters away from row specializations.
+
+WyFormer groups a discrete protostructure by space group, element, site symmetry and an enumeration that resolves rows sharing one site symmetry \cite{wyformer} (Secs.~1.1 and 2 of arXiv 2503.02407v2). Determining those tokens still leaves continuous geometry. Orbitol \cite{orbitol} receives a skeleton of occupied rows, sampled from training in its generation protocol (Secs.~3.1, 3.2 and 3.7 of v1). Its Eq.~(2) reconstructs all members of each orbit as $x_{wj}=[W_{wj}(u_w+1/2)+b_{wj}]\bmod1$ from $d_w$ free coordinates, and its Eq.~(3) reconstructs the cell from the permitted crystal-family parameters.
+
+For instance, the representative of the rutile $4f$ row in $P4_2/mnm$ is $(x,x,0)$, so its sole local direction is $(1,1,0)$. Changing $x$ moves all four oxygen sites together. Fixed Ti sites on $2a$ contribute no position parameter and the tetragonal metric leaves two cell lengths. In CrytalDrift the six-site $\mathrm{Ti}_2\mathrm O_4$ condition supplies neither these rows nor their symmetry operations. It allows the full six-component metric and all fractional sites modulo the common origin. Estimating the space group of a generated cell requires a separate symmetry analysis. A StructureMatcher hit alone certifies agreement only within the geometric matching tolerances.
+
+\newpage
+\paragraph{A reciprocal-space change that resolves the eight-site example.}
+The preceding models distinguish Euclidean frames, integer cell bases and origin conventions. For a descriptor meant to agree under all three, a finite list of fixed integer triplets alone is insufficient. For the two $\mathrm O_4\mathrm{Si}_4$ motifs in Section~\ref{s:fingerprint}, consider the same-axis triple
+\begin{equation}
+ B_{AAB}(h)=a_A(h)^2\,\overline{a_B(2h)}.
+ \label{s:collinear}
+\end{equation}
+The selected triples in \eqref{s:triples} use two \emph{distinct} axes, so they omit this phase coupling. With $h=e_1$ and the positive-exponent convention of Section~\ref{s:fingerprint}, let $\omega=e^{2\pi\ii/12}$. The transverse offset of species B contributes no phase along $h$. Thus, for either residue set $S$ in Proposition~3,
+\[
+ B_{AAB}(e_1)=\frac1{64}\left(\sum_{s\in S}\omega^s\right)^2
+                        \left(\sum_{s\in S}\omega^{-2s}\right)
+   =\begin{cases}(-\sqrt3+\ii)/32,&S=S_1,\\
+                  (+\sqrt3+\ii)/32,&S=S_2 .
+     \end{cases}
+\]
+Both complex magnitudes agree, while the real parts differ by $\sqrt3/16$. Translation cancels because the output wave is the sum of the input waves. Replacing $h$ by $-h$, or inverting all fractional sites, conjugates the result and preserves its real part.
+
+The coordinate index $e_1$ by itself depends on the deposited basis. For a physical reciprocal squared length $\lambda>0$ (using cycles per \AA), define its complete nonempty shell $\mathcal H_\lambda(G)=\{h\in\zz^3:h^\top G^{-1}h=\lambda\}$ and average $\operatorname{Re}B_{AAB}(h)$ over that shell. Under $L'=UL$ with $U\in GL(3,\zz)$, $h'=Uh$ bijects the shells and $f'=fU^{-1}$ preserves every phase. At $G=100\,\mathrm{diag}(1,\sqrt2,\sqrt3)$ and $\lambda=1/100$, the shell consists exactly of $\{\pm e_1\}$. Indeed $h_1^2+h_2^2/\sqrt2+h_3^2/\sqrt3=1$ and $1,1/\sqrt2,1/\sqrt3$ are rationally independent. The shell average therefore retains the signed real difference in every integral cell basis. This scalar is basis invariant. The remaining fixed-index fingerprint still depends on the deposited basis. The exact Fourier values and a numerical shell reindexing check are recorded by \work{scaled/harmonic_check.py}.
+
+A training ablation could append one or several such real-valued channels to the binary fingerprint, using smooth compactly supported radial weights in $h^\top G^{-1}h$ instead of an exact-equality shell as the cell changes. For a nonnegative, compactly supported smooth weight $w$, one possible channel is
+\[
+ b_w(G,F)=
+ \frac{\sum_{h\in\zz^3\setminus\{0\}} w(h^\top G^{-1}h)\operatorname{Re}B_{AAB}(h)}
+      {\varepsilon+\sum_{h\in\zz^3\setminus\{0\}} w(h^\top G^{-1}h)},\qquad \varepsilon>0 .
+\]
+Choose a bump that is positive at $1/100$ and whose support excludes all other reciprocal squared lengths in the worked metric. Finite support gives a finite sum for each positive-definite $G$. Complete enumeration of the reciprocal ellipsoid, including entries that cross the smooth cutoff, is needed for basis invariance of this channel. A narrow physical band can be empty at other volumes. The colliding pair is separated analytically by the complete-shell statistic. The training experiment below tests the signed fixed-axis component. A smooth complete-shell descriptor remains untrained.
+
+\newpage
+\section{Controlled fingerprint ablation and implementation checks}\label{s:ablation}
+All four arms retain the six cell entries and the original 13 waves. The pair arm retains 26 cross-power entries and 26 species-power entries (58 components in total). The original adds the real and imaginary parts of six mixed triples (70 total). The signed arm adds $x_{\rm new}=\operatorname{Re}B_{AAB}(e_1)/\sqrt6$ as a single 71st component. On the eight-site example the distance produced by this extra entry is $\sqrt3/(16\sqrt6)=1/(16\sqrt2)\simeq0.044194$. This fixed-axis quantity shares the original fingerprint's deposited-basis dependence.
+
+Appending one entry changes squared Euclidean distance by $(x_{\rm new}-x'_{\rm new})^2$. To quantify the scale, we paired 4,096 uniformly sampled training records with independent draws at the same composition from the archived seed-11 generator. Median feature distance increased by $0.109\%$, its 95th percentile increase was $4.97\%$, and the largest change was $21.39\%$. The mean added squared distance was $0.04966$. A fourth arm copies the existing $\operatorname{Re} C(e_1)/\sqrt{13}$ entry and multiplies it by 1.98717. This factor equalizes the mean added squared distance on those training pairs. The copied entry introduces no new information. The control matches one average perturbation and does not enforce equality of every individual affinity.
+
+\paragraph{Training and evaluation.}
+Each arm runs the same exact-formula training loop for 1,200 updates at seeds 11, 23 and 37. Bank labels, record indices, parameter initialization and input noises are paired within seed. Generated reference \emph{values} can diverge after the feature sets start producing different gradients. All three original-arm refits matched every saved parameter bit for bit. Evaluation retains exactly the first five candidates in the original 20-draw noise stream. The primary geometric score is \eqref{s:energy} on all 1,231 validation or 1,229 test records. The standard matcher uses the first 128 IDs by SHA-256 separately in each partition. We used the smallest validation score to identify the pair-only arm. All arm-level test outcomes are reported. Each interval resamples held-out IDs 10,000 times, paired across arms and averaged over the three fitted seeds per ID.
+
+For the test set the fair version of \eqref{s:energy}, with denominator $2M(M-1)$ on the off-diagonal sum, gives 3.0971 (pair), 3.1328 (original), 3.1321 (signed), and 3.1346 (reweighted pair). The corresponding fractions of proposals with all distances at least $0.5$~\AA\ were 97.28\%, 97.24\%, 97.28\%, and 97.22\%. All candidate geometries were evaluable and there were no matcher exceptions. The signed-minus-reweighted test difference in the primary score was $-0.0016$ ($[-0.0052,0.0019]$). Seed- and ID-level scores, per-candidate environments and matching RMS values, weights, noise replay and the calibrated control are included in \work{revision/ablation}.
+
+\paragraph{Why the scaled representation also collides.}
+For either earlier eight-site motif write $a_A(h)=\alpha$ and $a_B(h)=e^{\ii\phi}\alpha$, where $\phi=2\pi th$. Equal multiplicities give $a_*=(1+e^{\ii\phi})\alpha/2$, and $a_0=\alpha$. Every component in \eqref{s:extended} is therefore $|\alpha|^2$ times a factor depending only on species and $\phi$. The 1,306-entry descriptor agrees for both structures. Its largest observed discrepancy was $6.94\times10^{-18}$.
+
+Independent float64 checks on sorted one-, three- and four-species inputs reconstructed all scaled entries by explicit complex species sums to $1.39\times10^{-17}$. Common translations and within-species permutations changed the invariants and equivariant outputs by at most $1.12\times10^{-16}$. Both implementations of the within-formula field negated exactly on a bank swap. Automatic differentiation through a five-parameter test of \eqref{s:loss} agreed with the analytic pullback to $6.67\times10^{-16}$. These checks concern the map and gradients at fixed inputs, separate from the distributional assumptions on training anchors in Section~\ref{s:scaled}.
+\input{exp-proof}
+\endgroup

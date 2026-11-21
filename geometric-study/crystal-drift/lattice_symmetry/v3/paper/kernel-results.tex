@@ -1,0 +1,14 @@
+\begin{table}[!htbp]\centering\small\setlength{\tabcolsep}{3.6pt}
+\caption{Fixed full-traversal screen on 96 development targets at five draws. The last three columns give paired percentage-point changes and the numbers gained/lost against ordinary angular drift with Laplace affinity. Each model has 218,497 parameters. The same fixed physical seed bank and generator initialization enter every otherwise matched comparison.}
+\begin{tabular}{llrrrrr}\hline
+Descriptor & Affinity & Hits & Native & vs.\ prior & vs.\ angular & Gains/losses\\\hline
+Pair & laplace & 60 & 42 & +1.04 & -3.12 & 1/4\\
+Center radial & laplace & 61 & 42 & +2.08 & -2.08 & 1/3\\
+Angular & laplace & 63 & 42 & +4.17 & +0.00 & 0/0\\
+Orbit variance & laplace & 62 & 43 & +3.12 & -1.04 & 0/1\\
+Inter-orbit contact & laplace & 63 & 45 & +4.17 & +0.00 & 0/0\\
+Reciprocal & laplace & 63 & 42 & +4.17 & +0.00 & 0/0\\
+Angular & gaussian & 62 & 41 & +3.12 & -1.04 & 0/1\\
+Inter-orbit contact & gaussian & 62 & 41 & +3.12 & -1.04 & 0/1\\
+\hline\end{tabular}\end{table}
+\begin{figure}[htbp]\centering\includegraphics[width=.9\linewidth]{kernel-screen.pdf}\caption{Paired development increments at the end of one full traversal. Each interval resamples the 96 target identities with both arms fixed.}\end{figure}

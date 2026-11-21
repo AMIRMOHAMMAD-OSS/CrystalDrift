@@ -1,0 +1,108 @@
+\section{Geometry learned after the template and volume choices}\label{app:conditioned-results}
+
+\paragraph{What is known during generation.}
+
+In formula-only CSP the Cartesian Gaussian arm receives counts and noise. The symbolic arm infers an occupied pattern from a protected training catalog and samples its continuous geometry. The full-geometry donor arm transfers an actual training arrangement. Table~\ref{tab:main} compares all three at the same draw budgets. In a fourth diagnostic the target itself supplies its canonical Hall setting and element-labelled occupied letters. The target's continuous parameters and volume remain withheld.
+
+In the preceding periodic release the supplied-occupation prior and its matched one-call angular update recovered 4,152 and 4,549 of 9,046 official targets in one draw. Mean matched RMS was 0.181 and 0.170. The paired difference was +4.39 points (95\% interval +3.90 to +4.90), with 7 rejected labels counted as misses. On a separate 128-target supplied-occupation panel, twenty draws recovered 101, 106 and 121 targets with the prior, the angular model and the released 40-call DiffCSP++ sampler, respectively. These are earlier conventional-cell weights and seeds.
+
+We subsequently applied the frozen medium angular and contact models to the 96 confirmation targets with their inferred or supplied occupations. Formula-only draws visit up to five chemical shortlist entries. All five supplied draws use the same true occupation. The protected cell prior and random-coordinate sampler are the same, but the conditional cell donor can differ. Each model refines exactly the zero-call seeds in its own regime. All five attempts per target retain their position.
+
+\begin{table}[htbp]\centering\small\setlength{\tabcolsep}{4pt}
+\caption{Exploratory input-information sensitivity for frozen weights on 96 confirmation targets. Native is a scale-enabled match within a factor 1.1 of the physical target volume on the same draw. RMS@5 averages the best normalized displacement among recovered targets.}\label{tab:supplied-confirm}
+\begin{tabular}{llrrrr}\hline
+Occupation & Update & Hits@1 & Hits@5 & Native@5 & RMS@5\\\hline
+
+Inferred & Seed & 30 & 48 & 38 & 0.266\\
+
+Inferred & Angular & 31 & 50 & 32 & 0.233\\
+
+Inferred & Contacts & 32 & 51 & 34 & 0.238\\
+
+Supplied & Seed & 38 & 66 & 53 & 0.220\\
+
+Supplied & Angular & 43 & 70 & 54 & 0.187\\
+
+Supplied & Contacts & 44 & 70 & 48 & 0.187\\
+
+\hline\end{tabular}\end{table}
+
+The contact update changed five-draw recovery over its identical supplied seed by +4.17 points (95\% interval +1.04 to +8.33). Supplying the occupation changed the frozen contact model's recovery by +19.79 points versus formula-only inference (95\% interval +10.42 to +29.19). The supplied seed had 5 failed attempts among 480. All five belong to \texttt{mp-1079901}. Its deposited cell has 20 atoms, whereas its supplied pattern expands to 10 in the model's primitive chart. The failure remains in the denominator.
+
+The CPU rerun of inferred generation differed from the archived confirmation hit flags on \texttt{mp-2147}. The maximum cell-entry and wrapped fractional-site differences were \(7.63\times10^{-6}\)~\AA{} and \(1.19\times10^{-7}\). We retain both realizations. The registered checkpoint tables use their original output arrays.
+
+\paragraph{Discrete selection.}
+
+Reordering the same train-only candidates isolates discrete choice. On the 9,046 public test cases, the numbers supplied with the setting-equivalent, element-labelled occupied pattern at one, five and twenty draws are 5,766/7,469/7,955 for chemical lookup, 3,822/6,481/7,955 for training frequency, 5,792/7,528/7,955 for learned ranking. At five draws the ranker gains 137 targets and loses 78 against chemical ordering. The paired increase is 0.65 percentage points (95\% target-bootstrap interval 0.33 to 0.98). Twenty draws exhaust the common shortlist. These counts measure availability before the continuous decoder acts.
+
+Sampling fresh geometry directly from the ordered patterns recovers 4,795, 4,291, 4,780 targets for chemical, frequency and learned ordering at five draws. These results use the seed geometry without refinement. Learned ordering uses one selector call per shortlist. It changes recovery by -0.17 points (95\% interval -0.72 to +0.38) relative to chemical ordering.
+
+\paragraph{Recovery on protected structures.}
+
+At five draws the contact refiner's best accepted geometries recover the reference space-group type for 0/49 excluded-family matches and 58/70 represented-family matches at 0.01~\AA. In the excluded-family panel the zero-call symbolic prior, the native Gaussian prior and both reduced uFlowCSP models likewise have zero correct types among their best accepted geometries. For all five arms the zero persists at 0.10~\AA{} and after diagnostic rescaling to each true volume. A matcher can accept a packing whose independently detected group differs.
+
+At twenty draws we checked every accepted raw candidate at 0.01~\AA{} on the 228 withheld-family targets. At least one candidate had the true group on 2 targets for the prior and on 2 for each of the six contact fits (two sizes, three seeds). Only 1 target was common to both sets. None of the 20--21 additional targets recovered by an individual contact fit had a correct-group accepted candidate.
+
+On the 25 secondary unfamiliar arrangements, prior and contact refiner recover the same targets at every reported draw budget. Their counts are 0/1/4 at one, five and twenty draws. The observed zero difference comes from 25 cases. On the 96 covered controls, their five-draw recoveries are 34 and 41, a gain of 7.29 points (95\% interval 2.91 to 12.63 across occupied-pattern clusters).
+
+All three angular and all three contact fits recover exactly one unfamiliar target at five draws. On the covered controls their per-seed five-draw counts are 41/40/41 for angular and 41/41/41 for contacts.
+
+\paragraph{Cell volume and shortlist conditioning.}
+
+For candidate $j$, retain its learned fractional sites and cell shape while multiplying its lattice by $(V_{\rm seed,j}/V_{\rm out,j})^{1/3}$. This deterministic intervention uses the same sampled seed at inference. Isotropic rescaling preserves the mathematical scale-enabled displacement. Directly rematching the 480 small-angular development draws confirmed the same match indicators. The official sensitivity reuses the original scale-enabled match for each draw. For a retained matching draw, replace its native-volume indicator by $|\log(V_{\rm seed,j}/V_{\rm target})|\leq\log(1.1)$. Table~\ref{tab:geometry-volume} applies this gate before taking an OR over draws. Thus every counted candidate meets both conditions.
+
+\begin{table}[htbp]\centering\small\setlength{\tabcolsep}{4pt}
+
+\caption{Five-draw recovery on 9,046 official targets. Counts are numbers of matched targets. The paired difference compares seed-volume-qualified with raw-volume-qualified recovery in percentage points, with a 95\% target-bootstrap interval. Seed 11 is used for the fits.}\label{tab:geometry-volume}
+
+\begin{tabular}{lrrrr}\hline
+
+Method & Scale & Raw volume & Seed volume & Difference [95\% interval]\\\hline
+
+Symbolic seed & 4,795 & 3,970 & 3,970 & +0.00 [+0.00, +0.00]\\
+
+Small angular & 5,176 & 3,420 & 4,299 & +9.72 [+8.89, +10.52]\\
+
+Small contacts & 5,176 & 3,624 & 4,298 & +7.45 [+6.71, +8.19]\\
+
+Small reciprocal & 5,172 & 3,150 & 4,296 & +12.67 [+11.78, +13.55]\\
+
+Small MeanFlow & 5,149 & 194 & 4,280 & +45.17 [+44.10, +46.23]\\
+
+Medium angular & 5,171 & 3,539 & 4,294 & +8.35 [+7.58, +9.12]\\
+
+Medium contacts & 5,173 & 3,481 & 4,296 & +9.01 [+8.22, +9.81]\\
+
+Medium MeanFlow & 5,148 & 505 & 4,280 & +41.73 [+40.61, +42.80]\\
+
+Untrained small & 4,778 & 3,328 & 3,956 & +6.94 [+6.25, +7.62]\\
+
+Extended search, small angular & 5,176 & 3,420 & 4,299 & +9.72 [+8.89, +10.52]\\
+
+Extended search, medium angular & 5,171 & 3,539 & 4,294 & +8.35 [+7.58, +9.12]\\
+
+Extended search, medium contacts & 5,173 & 3,481 & 4,296 & +9.01 [+8.22, +9.81]\\
+
+Extended search, medium MeanFlow & 5,147 & 189 & 4,278 & +45.20 [+44.11, +46.26]\\
+
+\hline\end{tabular}\end{table}
+
+Across 12 first-traversal angular and contact fits (two sizes, three paired seeds), five-draw scale-enabled recovery was 5,170--5,176 of 9,046. Using each output cell's native volume gave 2,307--3,758 targets. Retaining the seed volume gave 4,293--4,299 targets across these same fits. These ranges describe fitted models on one fixed test panel.
+
+For the architecture controls, five-draw native-volume/seed-volume counts were 3,385/4,322 for the widened site graph, 3,467/4,297 for the 15M orbit model, 1,648/4,296 for the reference-scale orbit model. Each pair uses the same geometric proposals.
+
+At five draws the extended medium contact refiner recovers 4,936/7,469 targets with a reachable labelled occupation. Only 4,620 have an accepted draw carrying that occupation. Among 1,570 known targets with no such shortlisted occupation, 234 nevertheless pass geometric matching. After removing 90 tight species-preserving training matches, the respective recovery counts are 4,908/7,415 and 227/1,535. Unassigned reference occupations remain in the full denominator.
+
+On these 8,956 filtered targets this seed-volume update recovers 4,267 against 3,943 for the identical zero-call prior, a paired difference of +3.62 points (95\% interval +3.17 to +4.06).
+
+\paragraph{Symmetry of de novo proposals.}
+
+The explicit P1 CIF representation lists every site. Independently detected symmetry can be much higher. At 0.01~\AA{} the raw symbolic prior occupies 151 detected group types and the contact update occupies 151. The corresponding Jensen--Shannon distances to the full official test distribution are 0.090 and 0.086. We use the square root of the divergence in bits and retain unsuccessful detections as one additional category. For released angular and released uFlowCSP, 9,965 and 9,765 of 10,000 raw proposals have type $P1$ at this tolerance.
+
+The small and validation-selected medium angular and contact fits assign identical groups on all 10,000 paired draws, including 12 detection failures. Each differs from the symbolic seed on 14 draws. The archive preserves all 70,000 CIFs across the 7 pipelines. Independent CIF read-back checked the cell metric and wrapped sites in 224 cases.
+
+\begin{figure}[htbp]\centering\includegraphics[width=\linewidth]{spacegroups.pdf}\caption{As-generated groups compared with the official test structures and the exact training structures whose formulas were drawn. P1 and inversion-only cells are shown individually. Other assigned types are grouped by crystal system. Every generated row uses all 10,000 draws.}\label{fig:raw-groups}\end{figure}
+
+An independent native-basis operation test on the 256 prespecified raw draws found the requested subgroup in 255, 256, 256 structures for the prior, angular and contact methods, respectively. The detected operation sets exactly equalled the requests in 254, 255, 255. All eight raw members per method in the separate relaxation panel passed the exact test. After CHGNet, 6, 7, 8 retained exact agreement at 0.01~\AA. The post-relaxation comparison allows a common origin shift estimated from the mean wrapped site displacement. Eight paired cases give an illustrative sensitivity.
+
+The selected medium angular and contact fits retain their requested operation sets in 7/8 and 8/8 relaxed cells, respectively, at the same tolerance.

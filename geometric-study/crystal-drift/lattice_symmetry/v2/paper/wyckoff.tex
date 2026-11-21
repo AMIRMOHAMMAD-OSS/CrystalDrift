@@ -1,0 +1,23 @@
+\section{Generation with a supplied occupied Wyckoff template}\label{sec:wyckoff}
+The second task supplies a Hall setting and the multiset of element-labelled occupied Wyckoff letters. A letter can occur more than once. These inputs determine conventional-cell site counts, but provide neither the cell volume nor any free coordinate. We use the first 128 official test identifiers in their SHA-256 ordering. Their expanded conventional cells contain up to 60 sites. For each occupied orbit, we independently sample its free coordinates, expand the tabulated coset images and draw a compatible metric from a train-only prior. We evaluate a frozen formula-trained angular map on these seeds and fit a second angular map on expanded conventional crystals conditional on their supplied template. These are protocol C results. Protocol A supplies only the unit-cell composition.
+
+\begin{table}[!htbp]\centering\footnotesize\setlength{\tabcolsep}{3.4pt}
+\caption{Prediction from the same supplied Wyckoff templates on 128 test targets. MR (\%) and mean best normalized RMS use ordered raw draws. RMS averages the matched targets. Valid (\%) is the structural-validity fraction among all draws. Retained is the number of the first 16 targets whose first draw retains the requested subgroup after unconstrained CHGNet relaxation at 0.01\,\AA. The native DiffCSP++ row evaluates one draw.}\label{tab:wyckoff}
+\resizebox{\linewidth}{!}{\begin{tabular}{lrrrrrrrrr}\hline
+ & & \multicolumn{3}{c}{MR} & \multicolumn{3}{c}{RMS}& & \\
+Method & NFE & 1 & 5 & 20 & 1 & 5 & 20 & Valid & Retained\\\hline
+Template prior & 0 & 50.8 & 70.3 & 78.9 & 0.180 & 0.187 & 0.160 & 82.2 & 12\\
+A angular, template seeds & 1 & 56.2 & 74.2 & 82.8 & 0.168 & 0.165 & 0.139 & 89.2 & 14\\
+C angular & 1 & 56.2 & 73.4 & 82.8 & 0.171 & 0.164 & 0.141 & 88.9 & 15\\
+C angular + orbit variance & 1 & 56.2 & 74.2 & 82.8 & 0.168 & 0.164 & 0.139 & 89.6 & 14\\
+DiffCSP++ (respaced) & 40 & 82.0 & 92.2 & 94.5 & 0.044 & 0.032 & 0.026 & 100.0 & 16\\
+DiffCSP++ (native) & 1,998 & 86.7 & -- & -- & 0.031 & -- & -- & 100.0 & 16\\
+\hline\end{tabular}}\end{table}
+The C-trained angular map recovered 106 targets at twenty draws, compared with 101 for its train-fitted metric prior and random Wyckoff coordinates used alone. The paired recovery difference was 3.91 percentage points (95\% target-bootstrap interval $[0.78,7.03]$). Adding the variance across repeated orbits recovered the same 106 targets. Their mean matched RMS values were 0.141 and 0.139.
+DiffCSP++ supplies an independent predictor using the same group, letters and species \cite{diffcspplus}. We replayed its released MP-20 weights with 20 predictor--corrector iterations (40 neural calls) at all three draw budgets and repeated the first-draw comparison with the complete 999-iteration sampler (1,998 calls). The abbreviated sampler preserves the authors' coordinate projections and indexes their learned noise predictions at 20 equally spaced original time indices. It uses the corresponding noise marginals and respaced lattice posterior variance. SGFM also constrains each trajectory by supplied orbit information \cite{sgfm}.
+
+Across all 9,046 official test records, one draw from the template prior alone recovered 4,152 targets (45.90\%), and one C-angular proposal recovered 4,549 (50.29\%). The seven rejected template round trips remain in the denominator. The paired angular-minus-prior difference was 4.39 points ($[3.90,4.90]$).
+At 0.01\,\AA, the explicit site-orbit and metric tests accepted all 2,560 C-angular draws. Independent symmetry finding contained the requested operations on 2,557 draws and assigned the exact requested group type on 2,556. The detected operation set equalled the requested set in its supplied setting on 2,556 draws. After relaxation, 15/16 retained the requested subgroup, 15/16 recovered its operation set and 15/16 returned the requested group type. The raw guarantee concerns the operations shared by a template-compatible seed. Additional symmetry can occur, and unconstrained relaxation can alter the group.
+\begin{figure}[!htbp]\centering\includegraphics[width=.94\linewidth]{wyckoff-retention.pdf}
+\caption{Requested subgroup containment, exact finite operation set in the supplied setting, and exact international group type at 0.01\,\AA. Error bars give 95\% bootstrap intervals resampling whole target IDs. The left panel expands the range from 99.6 to 100\% and includes twenty draws on each of 128 targets. The right panel follows the first draw from the first sixteen targets per method. An optimizer step cap retains its last observable geometry.}\label{fig:wyckoff-retention}
+\end{figure}

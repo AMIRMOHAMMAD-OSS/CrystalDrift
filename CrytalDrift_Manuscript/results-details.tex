@@ -1,0 +1,101 @@
+\section{Experimental details and additional comparisons}\label{sec:csp-details}
+
+\subsection{Targets, endpoints and uncertainty}
+
+The official MP-20 test set spans 1--20 atoms per cell and 157 reported space-group types. It includes the two-site CuNi cell \texttt{mp-1225695}, the seven-site $\mathrm{NaTiVS}_4$ cell \texttt{mp-1220884}, and a 16-site $\mathrm{Li}_4\mathrm{Mn}_4\mathrm{O}_8$ cell \texttt{mp-1002572}. The conditioning information is the exact multiset of atomic species in each cell. A reduced formula alone would discard this multiplicity. For the discrete seed, each draw visits the next occupation on the train-only shortlist and samples fresh continuous coordinates. If the list is shorter than the requested number of draws, it cycles. All methods compared to the symbolic prior share these ordered draws. The native uFlowCSP comparisons use their own ordered Gaussian draws.
+
+The species-preserving matcher returns a normalized displacement $r_{ij}$ for proposal $j$ and target $i$. A missing or rejected proposal is assigned $r_{ij}=+\infty$. For $n$ sites with aligned Cartesian displacements $d_a$, this normalization divides $\sqrt{n^{-1}\sum_a \|d_a\|^2}$ by $(\bar V/n)^{1/3}$, where $\bar V$ is the volume of the matcher's average lattice. We used \texttt{pymatgen} 2024.4.13~\cite{pymatgen}, with primitive-cell reduction, lattice-length tolerance 0.3, site tolerance 0.5 and angle tolerance $10^\circ$. Uniform cell scaling was enabled and supercell and subset matching were disabled. The primary test uses a finite value of \texttt{get\_rms\_dist}. We additionally examined the library's \texttt{fit} decision, which applies a maximum-site displacement criterion.
+
+The target contributes $h_{ik}=\mathbf{1}\{\min_{j\leq k}r_{ij}<\infty\}$ to MR@$k$. We average $\min_{j\leq k}r_{ij}$ only across targets with $h_{ik}=1$. For native-volume recovery, the same candidate must have finite $r_{ij}$ and $|\log(V_{ij}/V_i)|\leq\log(1.10)$. On the full split and at five draws the maximum-site match rates were 38.83\% for the prior, 43.98\% for angular drift, 43.99\% for contact drift, 43.85\% for orbit MeanFlow, 57.40\% for released uFlowCSP and 84.00\% for geometry retrieval. The three orbit networks in this comparison each contain approximately 2M parameters.
+
+For a comparison of methods $A$ and $B$, we resampled the $N$ paired differences $h^A_{ik}-h^B_{ik}$, retaining each target's full draw sequence. We report percentage points and use the 2.5th and 97.5th percentiles of 5,000 bootstrap means. Where three training seeds were available, each target contributed its mean paired difference across the three fitted weights. Those intervals quantify variation across sampled targets for the observed fits. We resampled complete families on the structural-family challenge to retain dependence among members. Direct comparison to the symbolic prior at five draws gives 445 contact-only and 67 prior-only hits under scale-enabled matching. With the volume requirement the corresponding discordances are 508 and 997. Two matching criteria can therefore give opposite signs even with identical draws and a common denominator.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=.88\linewidth]{sites.pdf}
+\caption{Twenty-draw recovery on official MP-20 targets grouped by native-cell site count. Each point uses all targets in its indicated range.}\label{fig:sites}
+\end{figure}
+
+\subsection{Descriptor screen and independent fits}
+
+Each small generator had 218,497 registered parameters. For the full-traversal comparison it saw 26,419 training structures in 1,652 optimizer updates. Every pair of fits shared the optimizer schedule, generator initialization, physical seed bank, training anchor order, and evaluation noise. Coordinates and lattice were predicted jointly. The features, training references, and affinity calculation were absent from inference. Table~\ref{tab:kernel-all} reports all eight combinations in the fixed-exposure comparison. For the independent confirmation panel we applied the development rule specified before evaluation, choosing the better of the half- and full-traversal checkpoints, with ties resolved in favor of the earlier checkpoint. For this reason the development full-traversal and confirmation columns can describe different checkpoints.
+
+\begin{table}[tbp]\centering\small\setlength{\tabcolsep}{4pt}
+\caption{Targets recovered in five draws, out of 96 in each panel. Development columns use a fixed full traversal. Confirmation columns use the independently selected exposure shown. Native requires the same candidate to match in structure and volume. The final row is an additional radial-resolution experiment outside the original eight combinations.}\label{tab:kernel-all}
+\begin{tabular}{llrrlrr}\hline
+& & \multicolumn{2}{c}{Development} & & \multicolumn{2}{c}{Confirmation}\\
+Descriptor & Affinity & Hits & Native & Exposure & Hits & Native\\\hline
+Symbolic seed & --- & 59 & 47 & --- & 48 & 38\\
+Pair distances & Laplace & 60 & 42 & Half & 53 & 38\\
+Center radial & Laplace & 61 & 42 & Half & 52 & 40\\
+Angular & Laplace & 63 & 42 & Half & 50 & 31\\
+Angular + orbit variance & Laplace & 62 & 43 & Half & 50 & 26\\
+Angular + contacts & Laplace & 63 & 45 & Full & 50 & 33\\
+Angular + reciprocal & Laplace & 63 & 42 & Full & 50 & 28\\
+Angular & Gaussian & 62 & 41 & Half & 50 & 33\\
+Angular + contacts & Gaussian & 62 & 41 & Half & 50 & 32\\\hline
+Angular + four radial shells & Laplace & 63 & 42 & Full & 50 & 29\\\hline
+\end{tabular}
+\end{table}
+
+The preregistered rule advanced either the contact or the reciprocal extension to the larger replicated comparison, resolving ties in favor of contacts. A small reciprocal fit was nevertheless evaluated on the official split and reached 57.17\% at five draws. The four-shell angular sensitivity recovered 5,175/9,046 and passed the native-volume criterion on 3,478. These are single-fit estimates. The direct three-seed contact--angular comparison below resolves much smaller differences than a ranking on a 96-target panel would permit.
+
+\begin{table}[tbp]\centering\small\setlength{\tabcolsep}{4pt}
+\caption{Five-draw hits on 9,046 targets by training seed. Each run completed a traversal. Its checkpoint was chosen by development recovery at half and full exposure, with ties resolved in favor of the earlier fit. Gain compares that method to its own zero-call prior, averaged across the three fits. The brackets contain 95\% paired target-bootstrap intervals in percentage points.}\label{tab:e-repeat}
+\begin{tabular}{lrrrrrl}\hline
+Method & Prior hits & Seed 11 & Seed 23 & Seed 37 & Gain & Interval\\\hline
+Angular, 0.2M & 4,795 & 5,176 & 5,174 & 5,174 & 4.20 & [3.72, 4.67]\\
+Contacts, 0.2M & 4,795 & 5,176 & 5,174 & 5,175 & 4.20 & [3.71, 4.70]\\
+Angular, 2M & 4,795 & 5,171 & 5,170 & 5,172 & 4.16 & [3.67, 4.66]\\
+Contacts, 2M & 4,795 & 5,173 & 5,172 & 5,170 & 4.16 & [3.68, 4.66]\\
+Native uFlowCSP, 0.2M & 786 & 1,445 & 1,367 & 1,477 & 7.12 & [6.42, 7.80]\\
+Native uFlowCSP, 2M & 786 & 1,457 & 1,363 & 1,469 & 7.12 & [6.41, 7.81]\\\hline
+\end{tabular}
+\end{table}
+
+Comparing the contact and angular fits directly gives $+0.00$ points at 0.2M ($-0.07$ to $+0.08$) and $+0.01$ at 2M ($-0.03$ to $+0.04$). The absolute native-volume counts for the 2M contact fits were more variable across seeds at 3,481, 3,631 and 3,137. Their common seed prior passed the volume criterion for 3,970 targets. On the separate eight-traversal seed-11 comparison, the contact and angular updates recovered 5,167 shared targets. Their apparent two-target advantage comprised six contact-only and four angular-only hits.
+
+\subsection{Training exposure, capacity and comparator priors}
+
+The orbit fits used two positives and two generated negatives per reference bank. At 22,916 of the 26,419 scheduled anchors (86.74\%), only one distinct observed structure was available at that exact composition. Thus even a representation capable of distinguishing more packings frequently sees just one empirical positive geometry for a formula. The 2M contact model completed 211,352 training-anchor visits over eight passes in 16.2 minutes on the RTX 3060 Laptop. The small and medium angular fits required 13.8 and 14.1 minutes respectively. The same-backbone 2M MeanFlow required 28.1 minutes. For these extended fits we compared development recovery at $0.5,1,4,8$ traversals. Every orbit fit selected its first checkpoint. The deployed 2M contact model had seen 13,184 anchors. Training duration and deployed exposure therefore answer separate questions.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=.88\linewidth]{learning-curves.pdf}
+\caption{Development-set recovery for the orbit models at the saved training exposures. Each point counts targets recovered by at least one of five draws. The confirmation panel was withheld from checkpoint selection.}\label{fig:learn}
+\end{figure}
+
+A 15,011,747-parameter angular fit recovered 5,173 official targets in five draws. A 135,992,027-parameter contact fit also recovered 5,173, with native-volume recovery falling to 1,648 targets. The largest fit used microbatches of two and needed 13,210 optimizer updates to traverse 26,419 anchors. A 2M orbit fit took 1,652 updates for the same traversal. This change in batch size limits the interpretation of parameter count alone. Among the other frozen architectural controls, widening the released site graph to 218,883 parameters recovered 5,202 targets, compared with 5,145 for its refitted 6,723-parameter version. Directly transferring a donor's geometry and then applying an angular refinement recovered 7,780 targets, six fewer than returning that geometry unchanged.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=.90\linewidth]{capacity-cost.pdf}
+\caption{Five-draw recovery against parameter count on the public split (left) and median GPU first-proposal latency on the 64 timed targets (right). The released uFlowCSP point uses its published weights and its own initialization.}\label{fig:capacity}
+\end{figure}
+
+We also retrained reduced versions of the native uFlowCSP architecture from its own Gaussian prior. The small and medium models had 233,868 and 2,135,052 registered parameters. Both selected their eight-traversal checkpoint in the extended comparison. They recovered 1,252 and 2,184 targets at five draws (13.84\% and 24.14\%). Returning the identical Gaussian proposals for these runs recovered 786. The published weights, at 131,215,116 parameters and with the original noise stream, raised recovery from 780 Gaussian-prior hits to 6,156. Conditioning on the same cell composition leaves large differences in the information already carried by each model's initial geometry. The native uFlowCSP numbers at eight traversals and the shorter, three-seed experiment in Table~\ref{tab:e-repeat} refer to distinct training budgets.
+
+\begin{figure}[tbp]\centering
+\includegraphics[width=.88\linewidth]{uflow-learning.pdf}
+\caption{Five-draw development recovery of the native uFlowCSP fits. Each marker represents a saved moving-average checkpoint. The medium fit improved from 18 of 96 targets at half a traversal to 30 at eight.}\label{fig:ufit}
+\end{figure}
+
+\subsection{Clock and historical comparisons}
+
+The timing experiment used full precision with TF32 disabled, one host thread, and an RTX 3060 Laptop GPU. The shared training index took 6.02\,s to instantiate before the clock. For each formula we reset the shortlist cache and timed all work through decoded host arrays. The serial experiment interleaved method order and recorded the completion time of each proposal. Each target had a cap of 20 draws. At the 100\,ms deadline the contact-only and released-uFlowCSP-only counts were seven and ten, respectively. Fixed-workload throughput used 10,000 proposals in batches of 32, including the final 16-proposal batch. For one-call methods this required 313 batched network invocations. The sampler's costs exclude file output, scoring and relaxation.
+
+\begin{table}[tbp]\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Warm latency on 64 common formulas and batched throughput on the 10,000-proposal workload. Latency is in milliseconds and throughput in proposals per second. Both timings include the lookup for methods that require it.}\label{tab:e-cost}
+\begin{tabular}{lrrrrr}\hline
+ & \multicolumn{2}{c}{One-thread CPU} & \multicolumn{2}{c}{GPU} & GPU batch 32\\
+Method & Median & 95th pct. & Median & 95th pct. & Proposals/s\\\hline
+Symbolic seed & 1.05 & 2.71 & .98 & 3.82 & 959.2\\
+Full training geometry & 1.12 & 2.67 & .94 & 3.08 & 912.5\\
+Angular drift, 0.2M & 4.19 & 5.75 & 8.62 & 16.10 & 558.8\\
+Angular drift, 2M & 5.74 & 7.29 & 8.93 & 16.78 & 533.6\\
+Contact drift, 2M & 5.64 & 7.94 & 9.22 & 16.63 & 559.5\\
+Orbit MeanFlow, 2M & 5.60 & 7.48 & 8.94 & 13.73 & 520.7\\
+Retrained uFlowCSP, 0.2M & 5.02 & 6.38 & 9.14 & 15.62 & 2,378.1\\
+Retrained uFlowCSP, 2M & 11.23 & 13.66 & 10.76 & 15.38 & 1,894.5\\
+Released uFlowCSP & 280.86 & 307.72 & 17.56 & 26.40 & 271.7\\\hline
+\end{tabular}
+\end{table}
+
+Earlier releases answer different questions. The first, fixed-basis release trained compact binary models on 3,630 cells and tested a hash-selected cohort of 128 MP-20 binary structures with two to eight sites. At five draws, three-seed mean recovery was 43.75\% for fixed-basis drift and 50.78\% for the 16-step flow. On a separate 128-structure WBM cohort the analogous counts across three fits were 39/40/37 for drift and 47/47/39 for the flow. The second model used periodic environments to compare stochastic site configurations. Section~\ref{sec:csp-exp} reports its matched sampling comparison. The present orbit experiment starts from a train-inferred symbolic template, uses protected donor catalogs and refines its free coordinates. Comparing 31.79\% from the earlier release with 66.56\% from the current contact model changes both the starting distribution and the model. The matched kernel comparison is the one holding those choices fixed in Table~\ref{tab:kernel-all}.
