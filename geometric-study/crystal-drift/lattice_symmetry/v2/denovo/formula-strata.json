@@ -1,0 +1,128 @@
+{
+  "fixed-basis": {
+    "strata": {
+      "seen": {
+        "draws": 3522,
+        "structural": 3210,
+        "joint": 2959
+      },
+      "unseen": {
+        "draws": 6478,
+        "structural": 5860,
+        "joint": 4625
+      }
+    },
+    "structural": 9070,
+    "joint": 7584,
+    "unseen": 6478,
+    "recall": 0.49834180853415877,
+    "precision": 0.9909
+  },
+  "radial": {
+    "strata": {
+      "seen": {
+        "draws": 3522,
+        "structural": 3323,
+        "joint": 3065,
+        "screen_draws": 4,
+        "converged": 3,
+        "screen_hits": 0
+      },
+      "unseen": {
+        "draws": 6478,
+        "structural": 6106,
+        "joint": 4818,
+        "screen_draws": 12,
+        "converged": 5,
+        "screen_hits": 0
+      }
+    },
+    "structural": 9429,
+    "joint": 7883,
+    "unseen": 6478,
+    "recall": 0.6084457218660181,
+    "precision": 0.9904
+  },
+  "angular": {
+    "strata": {
+      "seen": {
+        "draws": 3522,
+        "structural": 3365,
+        "joint": 3102,
+        "screen_draws": 4,
+        "converged": 3,
+        "screen_hits": 0
+      },
+      "unseen": {
+        "draws": 6478,
+        "structural": 6194,
+        "joint": 4886,
+        "screen_draws": 12,
+        "converged": 3,
+        "screen_hits": 0
+      }
+    },
+    "structural": 9559,
+    "joint": 7988,
+    "unseen": 6478,
+    "recall": 0.6047977006411673,
+    "precision": 0.9903
+  },
+  "empirical-drift": {
+    "strata": {
+      "seen": {
+        "draws": 10000,
+        "structural": 9066,
+        "joint": 8170
+      },
+      "unseen": {
+        "draws": 0,
+        "structural": 0,
+        "joint": 0
+      }
+    },
+    "structural": 9066,
+    "joint": 8170,
+    "unseen": 0,
+    "recall": 0.6167366791952245,
+    "precision": 0.9974
+  },
+  "learned-uflow": {
+    "strata": {
+      "seen": {
+        "draws": 3522,
+        "structural": 3389,
+        "joint": 3129
+      },
+      "unseen": {
+        "draws": 6478,
+        "structural": 6104,
+        "joint": 4840
+      }
+    },
+    "structural": 9493,
+    "joint": 7969,
+    "unseen": 6478,
+    "recall": 0.994693787309308,
+    "precision": 0.9911
+  },
+  "crystalflow-joint-local": {
+    "strata": {
+      "seen": {
+        "draws": 1450,
+        "structural": 1450,
+        "joint": 1339
+      },
+      "unseen": {
+        "draws": 8550,
+        "structural": 8517,
+        "joint": 6880
+      }
+    },
+    "structural": 9967,
+    "joint": 8219,
+    "unseen": 8550,
+    "recall": 0.9879504753482202,
+    "precision": 0.9978
+  }
+}
