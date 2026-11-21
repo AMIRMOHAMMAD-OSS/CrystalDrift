@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+.env.*
+verification-local.json
+decoder-local.json
+*.aux
+*.log
